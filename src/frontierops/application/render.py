@@ -5,7 +5,7 @@ from hashlib import sha256
 import json
 
 from frontierops.application.ports import BriefingRenderer
-from frontierops.domain.models import BriefingSpec, Evidence
+from frontierops.domain.models import BriefingSpec, Evidence, EvidenceClaim
 
 
 @dataclass(frozen=True)
@@ -37,8 +37,8 @@ class RenderService:
 
 
 def claim_fingerprints(briefing: BriefingSpec) -> list[str]:
-    return [
-        sha256(json.dumps(claim.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
-        for section in briefing.sections
-        for claim in section.claims
-    ]
+    return [claim_fingerprint(claim) for section in briefing.sections for claim in section.claims]
+
+
+def claim_fingerprint(claim: EvidenceClaim) -> str:
+    return sha256(json.dumps(claim.model_dump(mode="json"), sort_keys=True).encode()).hexdigest()
