@@ -56,18 +56,32 @@ def _first_figure(
                 continue
             match, caption = caption_line
             crop = pymupdf.Rect(
-                page.rect.x0 + 60, max(page.rect.y0 + 35, caption.y0 - 112),
+                page.rect.x0 + 60, _figure_top(page, caption.y0),
                 page.rect.x1 - 60, caption.y0 - 3,
             )
             if crop.height < 35 or crop.width < 100:
                 continue
             target = render_dir / "visuals" / f"{source.stem}-p{number + 1}-fig-{match.group(1)}.png"
             target.parent.mkdir(parents=True, exist_ok=True)
-            if not target.is_file():
-                page.get_pixmap(matrix=pymupdf.Matrix(2, 2), clip=crop, alpha=False).save(target)
+            page.get_pixmap(matrix=pymupdf.Matrix(2, 2), clip=crop, alpha=False).save(target)
             return {
                 "uri": target.relative_to(render_dir).as_posix(),
                 "source_uri": source_uri, "page": number + 1,
                 "label": f"Figure {match.group(1)}", "caption": match.group(2)[:220],
             }
     return None
+
+
+def _figure_top(page: pymupdf.Page, caption_y: float) -> float:
+    """Include the whole vector/image figure above a caption, not just its last 112 pt."""
+    lower_bound = page.rect.y0 + 55  # Ignore running headers and their ornaments.
+    boxes = [item["rect"] for item in page.get_drawings()]
+    boxes.extend(
+        pymupdf.Rect(block["bbox"])
+        for block in page.get_text("dict")["blocks"] if block.get("type") == 1
+    )
+    tops = [box.y0 for box in boxes
+            if lower_bound <= box.y0 < caption_y and box.y1 <= caption_y]
+    if tops:
+        return max(lower_bound, min(tops) - 12)
+    return max(page.rect.y0 + 35, caption_y - 112)
