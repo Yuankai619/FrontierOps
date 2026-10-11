@@ -26,6 +26,8 @@ Live arXiv 依 `paper_ids`、`queries` 或 `categories` 查詢並保留 base ID 
 
 Local Library 由 `sources.local_library.roots` 注入。相對路徑以 `frontier.yaml` 所在目錄為基準，預設禁止 root 或 symlink 逃出 project；PDF 交由 PyMuPDF adapter 解析並保留 1-based page 與 bbox locator，Markdown／文字檔則保留 line-range locator。
 
+OpenReview 使用官方 `openreview-py` v2 client，保留 submission forum、note、invitation、reply 與 decision provenance。Offline fixture 是 deterministic demo 路徑；live mode 只從設定指定的 token 或 username/password 環境變數讀取認證，不會保存 secret value。
+
 ## 架構概覽
 
 專案採用 Hexagonal Architecture，依賴只允許朝核心方向流動：

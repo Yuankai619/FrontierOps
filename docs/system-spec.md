@@ -67,3 +67,4 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - Replaying an unchanged fixture produces no new `ResearchSignal` while retaining the new inspectable run.
 - Live arXiv uses the Atom API and preserves base IDs separately from versions; live Semantic Scholar uses stable author IDs and paginated author-paper responses.
 - Local-library roots are config-driven and project-confined by default; parser adapters emit source sections with PDF page/bbox or text line locators.
+- OpenReview uses the official API v2 client and preserves forum, invitation, reply, and decision provenance; credentials remain environment-only.

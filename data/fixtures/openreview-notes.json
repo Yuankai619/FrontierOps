@@ -1,0 +1,21 @@
+[
+  {
+    "provider": "openreview",
+    "external_id": "fixture-forum-2026-001",
+    "version": "1700000000000",
+    "updated_at": "2026-01-15T00:00:00Z",
+    "payload": {
+      "title": "Evaluating Tool-Using Research Agents",
+      "abstract": "A benchmark for evidence-grounded research agents.",
+      "authors": ["Fixture Author"],
+      "venue_id": "ICLR.cc/2026/Conference",
+      "forum": "fixture-forum-2026-001",
+      "note_id": "fixture-note-2026-001",
+      "invitations": ["ICLR.cc/2026/Conference/-/Submission"],
+      "decision": "Accept",
+      "replies": [
+        {"id": "fixture-review-1", "invitations": ["Official_Review"], "rating": "6: Weak Accept"}
+      ]
+    }
+  }
+]
