@@ -23,7 +23,7 @@ codex plugin add frontierops@frontierops
 copilot plugin install Yuankai619/FrontierOps:plugins/frontierops
 ```
 
-安裝 plugin 只讓 Agent 讀到工作流程；尚未安裝 Python Harness。開啟你的研究專案，對 Agent 說：「使用 `frontier-setup`，在這個 workspace 設定 FrontierOps。」Setup Skill 會檢查環境，使用 `uv` 安裝 Harness，執行一次 `frontier setup`，建立**實際可編輯的** `frontier.yaml` 和 `frontier_output/`；不覆蓋已有設定。`uv` 是必備前置工具，slides/video 另需 Node.js／npm。技能名稱可直接用自然語言提及；各宿主明確呼叫語法可能不同。
+安裝 plugin 只讓 Agent 讀到工作流程；尚未安裝 Python Harness。開啟你的研究專案，對 Agent 說：「使用 `frontier-setup`，在這個 workspace 設定 FrontierOps。」若要明確呼叫 Skill：Claude Code 輸入 `/frontierops:frontier-setup`、Codex 輸入 `$frontier-setup`、Copilot CLI 輸入 `/frontierops/frontier-setup`；其餘三個 Skill 只需替換末尾名稱。Setup 會檢查環境，用 `uv` 安裝 Harness，執行 `frontier setup`，建立**實際可編輯的** `frontier.yaml` 和 `frontier_output/`；不覆蓋已有設定。`uv` 是必備前置工具，slides/video 另需 Node.js／npm。
 
 接著可依序對 Agent 說：
 

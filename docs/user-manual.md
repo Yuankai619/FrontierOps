@@ -16,7 +16,7 @@ codex plugin add frontierops@frontierops
 copilot plugin install Yuankai619/FrontierOps:plugins/frontierops
 ```
 
-安裝 plugin 只有 Skill，還沒有 Python Harness。進入研究專案後，請 Agent 使用 [`frontier-setup`](../plugins/frontierops/skills/frontier-setup/SKILL.md)：「幫我在這裡 setup FrontierOps。」它會用 uv 安裝 Harness、檢查可用工具、執行 `frontier setup`，並回報 `frontier.yaml` 與 `frontier_output/` 的實際路徑。已存在的 YAML 不會被覆蓋；新 YAML 的來源預設關閉，需要下一步設定。
+安裝 plugin 只有 Skill，還沒有 Python Harness。進入研究專案後，請 Agent 使用 [`frontier-setup`](../plugins/frontierops/skills/frontier-setup/SKILL.md)：「幫我在這裡 setup FrontierOps。」明確呼叫語法分別為 Claude Code `/frontierops:frontier-setup`、Codex `$frontier-setup`、Copilot CLI `/frontierops/frontier-setup`；要跑其他 Skill 時只換最後名稱。Setup 會用 uv 安裝 Harness、檢查可用工具、執行 `frontier setup`，並回報 `frontier.yaml` 與 `frontier_output/` 的實際路徑。已存在的 YAML 不會被覆蓋；新 YAML 的來源預設關閉，需要下一步設定。
 
 1. 使用 [`frontier-config`](../plugins/frontierops/skills/frontier-config/SKILL.md)：「我研究多模態論文理解，追蹤某位學者與 CVPR，給我 8 分鐘互動 HTML 與 slides。」如果主題或來源不清楚，Agent 先詢問；學者／會議 ID 無法確認時不會臆造。產生的候選 YAML 先驗證、顯示差異，再套用到 active `frontier.yaml`。
 2. 使用 [`frontier-discover`](../plugins/frontierops/skills/frontier-discover/SKILL.md)：「現在檢查新論文，說明篩選理由。」這才會主動 Sync；Rank 的 HTML 公開於 `frontier_output/discoveries/<run-id>.html`，能搜尋、切換合格／排除，展開 Gate 與權重貢獻。

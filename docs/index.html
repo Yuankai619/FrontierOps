@@ -64,6 +64,7 @@ codex plugin add frontierops@frontierops
 # GitHub Copilot CLI
 copilot plugin install Yuankai619/FrontierOps:plugins/frontierops</pre></div>
       <ol class="steps"><li>在研究專案內告訴 Agent：「用 <code>frontier-setup</code> 在這裡設定 FrontierOps。」它會建立真的 <code>frontier.yaml</code> 與 <code>frontier_output/</code>，不覆蓋既有設定；uv 為必備前置工具。</li><li>說明主題、學者或會議，請 <code>frontier-config</code> 更新設定；缺少關鍵資訊時會詢問。<code>frontier.yaml.example</code> 只供離線示例，不是日常使用的 active 設定。</li><li>請 <code>frontier-discover</code> 檢查新研究，打開 <code>frontier_output/discoveries/&lt;run-id&gt;.html</code> 看排序理由。選好論文後請 <code>frontier-briefing</code> 解釋它；成果在 <code>frontier_output/briefings/&lt;run-id&gt;/</code>。</li></ol>
+      <p class="sidenote">明確呼叫 Setup Skill：Claude Code <code>/frontierops:frontier-setup</code>、Codex <code>$frontier-setup</code>、Copilot CLI <code>/frontierops/frontier-setup</code>。Config／Discover／Briefing 只需替換末尾名稱；也可直接用自然語言要求 Agent 使用對應 Skill。</p>
       <p class="sidenote">投影片是 OpenSlide 專案，需 Node.js／npm 建置；影片需明確啟用 HyperFrames 與旁白服務，預覽不等於 MP4。各框架 Skill 在其專案／環境內安裝，不複製進 FrontierOps plugin。</p>
     </div></section>
 
