@@ -9,11 +9,9 @@ Week 1 establishes versioned contracts, validated YAML configuration, a CLI skel
 ## Quick start
 
 ```bash
-python -m venv .venv
-. .venv/bin/activate
-python -m pip install -e .
-frontier build --config frontier.yaml.example
-python -m unittest discover -s tests
+uv sync --locked
+uv run frontier build --config frontier.yaml.example
+uv run --locked python -m unittest discover -s tests
 ```
 
 Build outputs are written beneath the configured `.frontier/runs/<run-id>/` directory and must not be committed.

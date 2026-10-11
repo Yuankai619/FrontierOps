@@ -42,6 +42,12 @@ Build -> Sync -> Rank -> Brief -> Review -> Render
 - Citation thresholds, freshness exemptions, weights, paths, duration, and render targets are configurable.
 - A gate is a pass/exclude/warn eligibility rule; a score orders candidates that remain eligible.
 
+## Runtime and dependency management
+
+- Python 3.12 is the development and CI baseline.
+- `uv` is the only supported environment and dependency manager; `uv.lock` makes installs reproducible.
+- CI installs with `uv sync --locked` and executes checks with `uv run --locked`.
+
 ## Week 1 acceptance
 
 - Versioned Pydantic models exist for config and the six core artifacts.

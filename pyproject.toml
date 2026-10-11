@@ -16,5 +16,8 @@ dependencies = [
 [project.scripts]
 frontier = "frontierops.cli:main"
 
+[tool.uv]
+required-version = ">=0.12.20,<0.13"
+
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -31,7 +31,8 @@ This file applies to the entire repository.
 ## Local checks
 
 ```bash
-python -m unittest discover -s tests/unit
-python -m unittest discover -s tests/integration
-python -m unittest discover -s tests
+uv sync --locked
+uv run --locked python -m unittest discover -s tests/unit
+uv run --locked python -m unittest discover -s tests/integration
+uv run --locked python -m unittest discover -s tests
 ```
