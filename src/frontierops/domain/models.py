@@ -137,6 +137,8 @@ class RankingConfig(StrictModel):
 class BriefConfig(StrictModel):
     target_duration_seconds: int = Field(default=300, gt=0)
     maximum_developments: int = Field(default=5, gt=0)
+    maximum_seconds_per_development: int = Field(default=75, gt=0)
+    narration_words_per_minute: int = Field(default=140, gt=0)
     outputs: list[Literal["html", "slides", "video"]] = Field(
         default_factory=lambda: ["html", "slides", "video"]
     )
@@ -300,7 +302,14 @@ class ResearchDevelopment(Artifact):
 
 class EvidenceClaim(StrictModel):
     text: str
+    kind: Literal["factual", "interpretation"] = "factual"
     evidence_ids: list[str]
+
+    @model_validator(mode="after")
+    def factual_claim_has_evidence(self) -> "EvidenceClaim":
+        if self.kind == "factual" and not self.evidence_ids:
+            raise ValueError("factual claim requires evidence_ids")
+        return self
 
 
 class BriefingSection(StrictModel):
@@ -308,6 +317,11 @@ class BriefingSection(StrictModel):
     duration_seconds: int = Field(gt=0)
     headline: str
     claims: list[EvidenceClaim] = Field(default_factory=list)
+    development_id: str | None = None
+    paper_explanation: PaperExplanation | None = None
+    narration_script: str = ""
+    caption_text: str = ""
+    visual_hint: str = ""
 
 
 class BriefingSpec(Artifact):

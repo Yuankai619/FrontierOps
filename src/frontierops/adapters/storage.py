@@ -30,6 +30,9 @@ class FileArtifactStore:
     def write_jsonl(self, path: Path, records: Iterable[Mapping[str, Any]]) -> None:
         self._write(path, "".join(json.dumps(record, ensure_ascii=False) + "\n" for record in records))
 
+    def write_text(self, path: Path, text: str) -> None:
+        self._write(path, text)
+
     def read_json(self, path: Path) -> Any:
         return json.loads(self._target(path).read_text(encoding="utf-8"))
 
