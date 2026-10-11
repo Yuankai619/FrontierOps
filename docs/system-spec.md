@@ -61,7 +61,7 @@
 ## Render 與影片核准邊界
 
 - Render 只讀取 `04-review/briefing.approved.json`，所有格式保存相同 claim fingerprints。
-- Render 會把可閱讀的 HTML、OpenSlide 專案與可用的 HyperFrames 預覽發布到 `project.output_dir/briefings/<run-id>/`，另附 `index.html` 與 `manifest.json`；公開目錄不含 Sync raw cache。重跑同一 Run 會建立帶序號的新目錄，不覆蓋既有成果。最終 MP4 與 preview 明確區分。
+- Render 會把可閱讀的 HTML、OpenSlide 專案與可用的 HyperFrames 預覽發布到 `project.output_dir/briefings/<run-id>/`，另附 `index.html` 與 `manifest.json`；公開目錄不含 Sync raw cache。每篇選中論文另有 `papers/paper-N/html/` 與 `papers/paper-N/slides/` 的獨立成果，manifest 逐篇列出路徑；根目錄綜合版暫供舊流程相容。重跑同一 Run 會建立帶序號的新目錄，不覆蓋既有成果。影片預覽目前仍為 Run 層級，尚未逐篇拆分；最終 MP4 與 preview 明確區分。
 - HTML adapter 是逐篇論文的互動閱讀介面：研究問題分頁、Evidence 展開、原文頁碼連結、可放大的論文圖。使用者應能先理解論文，再查核原文；不能只列靜態摘要卡。
 - Render 從已引用的本地 PDF 擷取附有 caption 與頁碼的原圖，記入 `assets-manifest.json.visuals`。向上裁切範圍須涵蓋 caption 前的整張向量／影像圖，而非固定高度的圖尾；找不到可驗證圖片時明示缺少素材，不生成貌似原圖的裝飾圖；圖像抽取失敗不得影響文字簡報。
 - Slides adapter 從同一份 `BriefingSpec` 與原圖素材產生 OpenSlide v2 的 React `Page[]` 專案，位於 `05-render/open-slide/`。頁面以論文問題、方法原圖、結果與限制組織；每頁只有一個主訊息，原圖必須標明 Figure 與頁碼。輸出 `index.tsx` 是可編輯 deck source；執行專案內 `npm run build` 才得到 `dist/` 靜態展示站，PDF 由 OpenSlide 工具列匯出。
