@@ -54,8 +54,7 @@
 - Coding-agent Skills 必須透過這些命令修改設定，不可直接盲改 active config。
 - Scholar／venue resolver 回傳 stable ID 與消歧資訊；多個候選必須由使用者明確確認。
 - Offline fixtures 定義 adapter contract；live provider 可替換 adapter 而不改 use case。
-- `skills/frontier-config/SKILL.md` 是自然語言設定流程的 portable Skill，不內嵌 LLM client 或 agent framework。
-- `skills/frontier-briefing/SKILL.md` 是使用既有 Coding Agent 執行、查核與展示整條研究簡報流程的 portable Skill。它明確區分 Sync 觸發、Review 發布邊界、OpenSlide source/build 與影片 preview/MP4 核准；不得繞過主系統 artifacts。
+- `plugins/frontierops/skills/` 提供 portable Setup／Config／Discover／Briefing Skill；自然語言設定、使用者觸發的 Sync、Review 發布邊界及輸出查核由既有 Coding Agent 操作，不內嵌 LLM client 或 agent framework。OpenSlide source/build 與影片 preview/MP4 核准仍須明確區分；不得繞過主系統 artifacts。
 - 安全順序是 `schema/inspect -> draft -> resolve -> validate -> diff -> apply`；preview-only 或未消歧請求必須停在 apply 前。
 
 ## Render 與影片核准邊界
