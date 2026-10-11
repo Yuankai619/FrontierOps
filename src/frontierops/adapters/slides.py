@@ -58,7 +58,8 @@ class OpenSlideRenderer:
             "package.json": json.dumps({
                 "name": "frontierops-briefing", "private": True, "version": "0.0.0",
                 "type": "module", "scripts": {"dev": "open-slide dev", "build": "open-slide build",
-                                                 "preview": "open-slide preview"},
+                                                 "preview": "open-slide preview",
+                                                 "sync:skills": "open-slide sync:skills"},
                 "dependencies": {"@open-slide/core": "2.0.0", "react": "19.2.8", "react-dom": "19.2.8"},
                 "devDependencies": {"@types/react": "19.2.18", "@types/react-dom": "19.2.5"},
             }, indent=2) + "\n",

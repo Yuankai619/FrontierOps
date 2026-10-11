@@ -67,6 +67,7 @@ ranking:
             slides = (run / render_result["outputs"]["slides"]).read_text()
             package = json.loads((run / "05-render/open-slide/package.json").read_text())
             self.assertEqual(package["dependencies"]["@open-slide/core"], "2.0.0")
+            self.assertEqual(package["scripts"]["sync:skills"], "open-slide sync:skills")
             self.assertEqual(slides.count('data-claim-fingerprint="'),
                              len(render_result["claim_fingerprints"]))
 
