@@ -16,6 +16,8 @@
 
 `Build -> Sync -> Rank -> Brief -> Review -> Render`
 
+研究人員入口收斂為 `Setup -> Config -> Discover -> Briefing`；前者建立真正的 `frontier.yaml` 與公開成果目錄，Config 使用自然語言與必要追問，Discover 內含手動 Sync＋Rank，Briefing 內含 Brief＋Review＋Render。六個原階段仍是可重現、可除錯的內部契約，不要求研究人員逐一操作。
+
 - **Build：** 驗證設定並建立可重現的 Run。
 - **Sync：** 與上一次成功狀態比較資料來源；系統不內建排程器。
 - **Rank：** 套用 YAML 定義的 eligibility gates 與可拆解分數。
@@ -37,6 +39,7 @@
 ## 保存與政策
 
 - `.frontier/runs/` 採 append-only；`.frontier/state/` 保存 cursors；`.frontier/cache/raw/` 保存 immutable source snapshots。
+- `project.output_dir` 預設 `frontier_output/`，保存可供研究人員直接開啟的成果；內部 Run 與公開成果分離。Setup 不覆蓋既有 `frontier.yaml`，新設定的來源預設關閉，產出先選 HTML／slides；影片須確認 TTS 與授權後啟用。
 - JSON／JSONL artifacts 是可直接檢查的 source of truth；SQLite 只是可重建的查詢索引。
 - 失敗的 Sync Run 仍保留供除錯，但不得推進 last-successful cursor。
 - `frontier.yaml` 擁有 domain policy；未知欄位必須失敗，secret 只保存環境變數名稱。

@@ -16,11 +16,15 @@ from frontierops.rank import run_rank
 from frontierops.brief import run_brief
 from frontierops.review import run_review
 from frontierops.render import run_render
+from frontierops.setup import run_setup
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="frontier")
     commands = parser.add_subparsers(dest="command", required=True)
+    setup = commands.add_parser("setup", help="initialize an active config and output directory")
+    setup.add_argument("--workspace", type=Path, default=Path("."))
+    setup.add_argument("--name")
     build = commands.add_parser("build", help="validate config and initialize a run")
     build.add_argument("--config", type=Path, required=True)
     sync = commands.add_parser("sync", help="manually fetch source deltas")
@@ -69,6 +73,14 @@ def _parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
+        if args.command == "setup":
+            result = run_setup(args.workspace, args.name)
+            print(json.dumps({
+                "config_path": str(result.config_path),
+                "output_dir": str(result.output_dir),
+                "created_config": result.created_config,
+            }, ensure_ascii=False))
+            return 0
         if args.command == "build":
             print(run_build(args.config))
             return 0
