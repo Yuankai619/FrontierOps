@@ -6,7 +6,7 @@ import unittest
 from frontierops.adapters.html import StaticHtmlRenderer
 from frontierops.adapters.slides import OpenSlideRenderer
 from frontierops.application.render import RenderService, claim_fingerprints
-from frontierops.domain.models import BriefingSpec, Evidence
+from frontierops.domain.models import BriefingSpec, Evidence, SourceExcerpt
 
 
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
@@ -75,7 +75,7 @@ class RenderServiceTests(unittest.TestCase):
                          claim_fingerprints(spec))
         self.assertEqual(document.count('data-claim-fingerprint="'), 1)
         self.assertIn("import type { Page, SlideMeta } from '@open-slide/core'", document)
-        self.assertIn("export default [Cover, Paper1Context", document)
+        self.assertIn("export default [Cover, Paper1Overview, Paper1Context", document)
         self.assertNotIn("class=\"kicker\"", document)
 
     def test_openslide_imports_a_source_figure(self) -> None:
@@ -86,3 +86,27 @@ class RenderServiceTests(unittest.TestCase):
         self.assertIn('<img src={figure1}', document)
         self.assertIn("Figure 1 · p. 2", document)
         self.assertIn("export const notes =", document)
+
+    def test_bibliography_and_executive_summary_are_visible(self) -> None:
+        spec = briefing()
+        spec.sections[0].paper_metadata.authors = ["A. Scholar", "B. Researcher"]
+        spec.sections[0].paper_metadata.affiliations = ["Example University"]
+        spec.sections[0].paper_metadata.publication_status = "preprint"
+        spec.sections[0].paper_metadata.published_at = "2026-05-29"
+        spec.sections[0].paper_metadata.arxiv_id = "2605.31468"
+        html = StaticHtmlRenderer().render(spec, [evidence()])
+        slides = OpenSlideRenderer().render(spec, [evidence()])
+        self.assertIn("重點摘要", html)
+        self.assertIn("A. Scholar", html)
+        self.assertIn("Example University", slides)
+        self.assertIn("arXiv:2605.31468", slides)
+
+    def test_exact_source_excerpt_is_highlighted_without_figure(self) -> None:
+        spec = briefing()
+        spec.sections[0].source_excerpts = [SourceExcerpt(
+            evidence_id="evidence-1", quote="101 papers & videos",
+        )]
+        html = StaticHtmlRenderer().render(spec, [evidence()])
+        slides = OpenSlideRenderer().render(spec, [evidence()])
+        self.assertIn("<mark>101 papers &amp; videos</mark>", html)
+        self.assertIn("source-quote", slides)

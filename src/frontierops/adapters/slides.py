@@ -28,7 +28,7 @@ class OpenSlideRenderer:
             "const Cover: Page = () => <div className=\"fo-slide cover\"><style>{css}</style>"
             f"<h1>{'{' + _js(briefing.title) + '}'}</h1>"
             f"<p>{'{' + _js(_cover_message(briefing)) + '}'}</p>"
-            "<footer>FrontierOps · source-grounded briefing</footer></div>;"
+            f"<footer>{'{' + _js(_cover_source(briefing)) + '}'}</footer></div>;"
         ]
         names = ["Cover"]
         notes = [briefing.title]
@@ -76,9 +76,25 @@ class OpenSlideRenderer:
 
 
 def _cover_message(briefing: BriefingSpec) -> str:
-    if briefing.sections and len(briefing.sections[0].claims) > 1:
-        return _short(briefing.sections[0].claims[1].text, 210)
-    return "An evidence-grounded explanation of new research"
+    if not briefing.sections:
+        return ""
+    meta = briefing.sections[0].paper_metadata
+    authors = ", ".join(meta.authors[:4]) + (" et al." if len(meta.authors) > 4 else "")
+    return "\n".join(value for value in (authors, ", ".join(meta.affiliations),
+                                          meta.published_at or "", _publication(meta)) if value)
+
+
+def _cover_source(briefing: BriefingSpec) -> str:
+    if not briefing.sections:
+        return ""
+    meta = briefing.sections[0].paper_metadata
+    return " · ".join(value for value in (meta.publication_venue or _publication(meta),
+                                           f"arXiv:{meta.arxiv_id}" if meta.arxiv_id else "") if value)
+
+
+def _publication(meta) -> str:
+    return {"preprint": "arXiv preprint", "conference": "Conference paper",
+            "journal": "Journal article"}.get(meta.publication_status, "Publication status unverified")
 
 
 def _paper_pages(number, section, evidence, figure, figure_name) -> tuple[list[str], list[str]]:
@@ -86,40 +102,51 @@ def _paper_pages(number, section, evidence, figure, figure_name) -> tuple[list[s
     if not claims:
         return [], []
     problem = claims[0]
-    significance = claims[6] if len(claims) > 6 else None
-    method = claims[2] if len(claims) > 2 else None
     idea = claims[1] if len(claims) > 1 else None
+    method = claims[2] if len(claims) > 2 else None
     novelty = claims[3] if len(claims) > 3 else None
     results = claims[4] if len(claims) > 4 else None
     limits = claims[5] if len(claims) > 5 else None
+    significance = claims[6] if len(claims) > 6 else None
     prefix = f"Paper{number}"
-    source = _source_line(problem, evidence)
-    problem_title = _short(problem.text.split(":", 1)[0], 125)
-    problem_detail = problem.text.split(":", 1)[1].strip() if ":" in problem.text else problem.text
+    overview = (f"const {prefix}Overview: Page = () => <div className=\"fo-slide overview\"><style>{{css}}</style>"
+                f"<h2>Executive summary</h2><div className=\"overview-body\">"
+                f"<div><h3>Contribution</h3>{_statement(idea, 'summary-line') if idea else ''}</div>"
+                f"<div><h3>Why it matters</h3>{_statement(significance, 'summary-line') if significance else ''}</div></div>"
+                f"<footer>{'{' + _js(_source_line(idea, evidence)) + '}'}</footer></div>;")
     context = (f"const {prefix}Context: Page = () => <div className=\"fo-slide context\"><style>{{css}}</style>"
-               f"<h2>{'{' + _js(problem_title) + '}'}</h2>"
-               f"{_statement(problem, 'question', problem_detail)}"
-               f"{_statement(significance, 'meaning') if significance else ''}"
-               f"<footer>{'{' + _js(source) + '}'}</footer></div>;")
+               f"<h2>Research problem</h2>{_statement(problem, 'main')}"
+               f"<footer>{'{' + _js(_source_line(problem, evidence)) + '}'}</footer></div>;")
     figure_markup = (
         f'<figure><img src={{{figure_name}}} alt={{{_js(str(figure["label"]) + " from paper")}}} />'
         f'<figcaption>{{{_js(str(figure["label"]) + " · p. " + str(figure["page"]))}}}</figcaption></figure>'
-        if figure else '<p className="no-figure">No source figure available; inspect the cited paper.</p>'
+        if figure else _excerpt_markup(section, evidence)
     )
-    method_title = _short(idea.text if idea else method.text if method else section.headline)
     method_page = (f"const {prefix}Method: Page = () => <div className=\"fo-slide method\"><style>{{css}}</style>"
-                   f"<h2{(' data-claim-fingerprint=\"' + claim_fingerprint(idea) + '\"') if idea else ''}>{'{' + _js(method_title) + '}'}</h2>{figure_markup}"
+                   f"<h2>Proposed system</h2>{figure_markup}"
                    f"<div className=\"method-points\">"
                    f"{_statement(method, 'method-text') if method else ''}"
                    f"{_statement(novelty, 'novelty') if novelty else ''}</div>"
                    f"<footer>{'{' + _js(_figure_source(figure, section.headline)) + '}'}</footer></div>;")
-    result_title = _short(results.text if results else section.headline)
     result_page = (f"const {prefix}Results: Page = () => <div className=\"fo-slide results\"><style>{{css}}</style>"
-                   f"<h2>{'{' + _js(result_title) + '}'}</h2>"
-                   f"<div className=\"result-body\">{_statement(results, 'finding') if results else ''}"
-                   f"{_statement(limits, 'limit') if limits else ''}</div>"
+                   f"<h2>Evaluation</h2>"
+                   f"<div className=\"result-body\">{_statement(results, 'finding') if results else ''}</div>"
                    f"<footer>{'{' + _js(_source_line(results, evidence) if results else section.headline) + '}'}</footer></div>;")
-    return [context, method_page, result_page], [prefix + "Context", prefix + "Method", prefix + "Results"]
+    limits_page = (f"const {prefix}Limits: Page = () => <div className=\"fo-slide limits\"><style>{{css}}</style>"
+                   f"<h2>Limits and open questions</h2>{_statement(limits, 'main') if limits else ''}"
+                   f"<footer>{'{' + _js(_source_line(limits, evidence) if limits else section.headline) + '}'}</footer></div>;")
+    return ([overview, context, method_page, result_page, limits_page],
+            [prefix + name for name in ("Overview", "Context", "Method", "Results", "Limits")])
+
+
+def _excerpt_markup(section, evidence: dict[str, Evidence]) -> str:
+    for excerpt in section.source_excerpts:
+        item = evidence.get(excerpt.evidence_id)
+        if item:
+            page = item.locator.get("page")
+            return (f'<blockquote className="source-quote"><mark>{{{_js(_short(excerpt.quote, 500))}}}</mark>'
+                    f'<cite>{{{_js("Paper p. " + str(page))}}}</cite></blockquote>')
+    return '<p className="no-figure">No verified paper figure or excerpt supplied.</p>'
 
 
 def _statement(claim: EvidenceClaim | None, class_name: str, display: str | None = None) -> str:
@@ -142,13 +169,12 @@ def _figure_source(figure: dict | None, paper: str) -> str:
 
 
 _CSS = """const css = `
-.fo-slide{width:100%;height:100%;box-sizing:border-box;padding:86px 112px 74px;background:#f9f8f4;color:#202722;font-family:Arial,sans-serif;position:relative;overflow:hidden}
-.fo-slide h1{font:700 104px/1.08 Georgia,serif;max-width:1540px;margin:80px 0 36px}.fo-slide h2{font:700 62px/1.12 Georgia,serif;margin:0 0 32px;max-width:1670px}
-.fo-slide p{margin:0}.fo-slide footer{position:absolute;bottom:48px;left:112px;font-size:20px;color:#5c655d}
-.cover{display:flex;flex-direction:column;justify-content:center}.cover p{font-size:38px;line-height:1.3;max-width:1260px;border-top:3px solid #276b59;padding-top:28px}
-.context .question{font:40px/1.42 Georgia,serif;max-width:1450px;margin:45px 0 65px}.context .meaning{font-size:32px;color:#276b59;max-width:1300px;border-left:5px solid #276b59;padding-left:26px}
-.method figure{margin:0;max-width:1690px}.method img{display:block;width:100%;max-height:470px;object-fit:contain;background:#fff}.method figcaption{font-size:21px;color:#5c655d;margin-top:8px}
-.method-points{display:grid;grid-template-columns:1fr 1fr;column-gap:55px;row-gap:12px;margin-top:27px;font-size:27px;line-height:1.25}.method-points .novelty{grid-column:1/-1;color:#276b59}
-.no-figure{font-size:32px;padding:80px;border:2px solid #b6beb6}.result-body{display:grid;grid-template-columns:1.3fr 1fr;gap:75px;margin-top:65px;font:37px/1.42 Georgia,serif}
-.result-body .finding{border-top:5px solid #276b59;padding-top:25px}.result-body .limit{border-top:2px solid #77877e;padding-top:28px;color:#4e5b52}
+.fo-slide{width:100%;height:100%;box-sizing:border-box;padding:90px 118px 80px;background:#fff;color:#111;font-family:Arial,sans-serif;position:relative;overflow:hidden}
+.fo-slide h1{font:700 98px/1.07 Georgia,serif;max-width:1600px;margin:0 0 44px}.fo-slide h2{font:700 66px/1.1 Georgia,serif;margin:0 0 48px;max-width:1640px}
+.fo-slide p{margin:0}.fo-slide footer{position:absolute;bottom:45px;left:118px;right:118px;border-top:1px solid #aaa;padding-top:12px;font-size:20px;color:#555}
+.cover{display:flex;flex-direction:column;justify-content:center}.cover p{font-size:31px;white-space:pre-line;line-height:1.45;max-width:1450px}
+.overview-body{display:grid;grid-template-columns:1fr 1fr;gap:70px;margin-top:90px}.overview h3{font-size:27px;margin:0 0 15px;border-top:2px solid #111;padding-top:17px}.summary-line{font:36px/1.38 Georgia,serif}
+.context .main,.limits .main{font:47px/1.35 Georgia,serif;max-width:1450px;margin-top:100px}.method figure{margin:0;max-width:1670px}.method img{display:block;width:100%;max-height:540px;object-fit:contain}.method figcaption{font-size:20px;color:#555;margin-top:7px}
+.method-points{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:30px;font-size:27px;line-height:1.3}.source-quote{font:36px/1.4 Georgia,serif;margin:50px 0;max-width:1500px}.source-quote mark{background:#ffed9c}.source-quote cite{display:block;font:21px Arial,sans-serif;margin-top:20px}
+.no-figure{font-size:30px;color:#555}.result-body{font:48px/1.35 Georgia,serif;max-width:1470px;margin-top:90px}
 `;"""

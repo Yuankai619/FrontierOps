@@ -65,3 +65,14 @@ class ReviewServiceTests(unittest.TestCase):
             [item], ReviewConfig(), "run-1", NOW,
         )
         self.assertEqual(output.claim_checks[0].status, "unsupported_number")
+
+    def test_highlighted_quote_must_exist_in_evidence(self) -> None:
+        draft = briefing("The benchmark contains 101 papers and improves accuracy by 10%.")
+        draft["sections"][0]["source_excerpts"] = [{
+            "evidence_id": "evidence-1", "quote": "The benchmark contains 101 papers",
+        }]
+        accepted = ReviewService().execute(draft, [evidence()], ReviewConfig(), "run-1", NOW)
+        self.assertEqual(accepted.report.decision, "approved")
+        draft["sections"][0]["source_excerpts"][0]["quote"] = "This text does not occur in the source"
+        rejected = ReviewService().execute(draft, [evidence()], ReviewConfig(), "run-1", NOW)
+        self.assertIn("invalid_source_excerpt", {item.code for item in rejected.report.issues})

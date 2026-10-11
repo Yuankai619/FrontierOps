@@ -372,6 +372,12 @@ class EvidenceClaim(StrictModel):
         return self
 
 
+class SourceExcerpt(StrictModel):
+    evidence_id: str
+    quote: str = Field(min_length=12)
+    caption: str | None = None
+
+
 class BriefingSection(StrictModel):
     id: str
     duration_seconds: int = Field(gt=0)
@@ -380,6 +386,7 @@ class BriefingSection(StrictModel):
     development_id: str | None = None
     paper_explanation: PaperExplanation | None = None
     paper_metadata: PaperMetadata = Field(default_factory=PaperMetadata)
+    source_excerpts: list[SourceExcerpt] = Field(default_factory=list)
     narration_script: str = ""
     caption_text: str = ""
     visual_hint: str = ""
