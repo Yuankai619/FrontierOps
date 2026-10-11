@@ -26,7 +26,7 @@ copilot plugin install Yuankai619/FrontierOps:plugins/frontierops
 
 ## 開發者／除錯用指令
 
-在 FrontierOps 原始碼 checkout 中，使用 `uv sync --locked`，再以 `uv run --locked frontier` 執行下表指令；測試為 `uv run --locked python -m unittest discover -s tests -v`。手動重現時，`sync` 會印出 Run 的**絕對路徑**；後續 rank、brief、review、render 都必須使用同一路徑。研究人員不必自行逐步執行。
+在 FrontierOps 原始碼 checkout 中，使用 `uv sync --locked`。完整離線驗收請依 [README 的 fixture 流程](../README.md#離線端到端驗收) 執行：`sync --config frontier.yaml.example` 後依序 rank、brief、review、render，使用同一個 stdout 印出的**絕對 Run 路徑**；測試為 `uv run --locked python -m unittest discover -s tests -v`。研究人員不必自行逐步執行。
 
 ## 指令參考
 
