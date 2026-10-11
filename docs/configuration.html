@@ -1,59 +1,170 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>frontier.yaml — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
-<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
-<main class="container doc-page"><h1><code>frontier.yaml</code></h1><p class="lead">這是唯一生效的設定。Agent 可以替你寫；需要手動檢查時，用下列欄位對照。未知欄位會驗證失敗，未指定值保留 schema 預設。</p>
-<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html">Quick Start</a><a href="steps.html">四個使用步驟</a><a href="configuration.html" aria-current="page">frontier.yaml</a><a href="credentials.html">Credentials</a><a href="commands.html">指令參考</a><a href="outputs.html">輸出與紀錄</a></nav><article class="docs-main">
-<section><h2>單篇 PDF 的設定</h2><pre><code>schema_version: "0.1"
-project:
-  id: autosci
-  name: AutoSci
-  language: en
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Configuration — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
+<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">Documentation</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
+<main class="container doc-page"><h1><code>frontier.yaml</code></h1><p class="lead">The active, validated configuration for one research workspace. This page documents every top-level block and nested setting in schema version 0.1.</p>
+<div class="docs-layout"><nav class="docs-nav" aria-label="Documentation pages"><a href="quick-start.html">Quick Start</a><a href="steps.html">Workflow</a><a href="configuration.html" aria-current="page">Configuration</a><a href="credentials.html">Credentials</a><a href="commands.html">CLI reference</a><a href="outputs.html">Outputs and history</a></nav><article class="docs-main">
+<p class="section-index">On this page: <a href="#project">Project</a> · <a href="#sources">Sources</a> · <a href="#tracking">Tracking</a> · <a href="#profile">Profile</a> · <a href="#ranking">Ranking</a> · <a href="#sync">Sync</a> · <a href="#brief">Brief and Review</a> · <a href="#video">Video</a></p>
+<section id="rules"><h2>Reading this file</h2><p>Only <code>project.id</code> and <code>project.name</code> are required when writing a file from scratch; Setup creates them. Omitted fields take the defaults below. Unknown fields fail validation. Relative paths are resolved against the directory containing <code>frontier.yaml</code>, except the video script, which Render also resolves from that directory. Run <code>frontier config validate --config frontier.yaml</code> after editing and <code>frontier schema config --format json</code> for machine-readable types.</p>
+<p>Use stable <code>profile.topics[].id</code> values across searches. Changing a date window under the same ID allows Discovery to report what entered the new scope; it does not claim that every returned paper was just published. The checked-in <code>frontier.yaml.example</code> is an offline development fixture, not your active file. The Config Skill writes a <code>*.candidate.yaml</code> proposal, validates and diffs it, then applies it to <code>frontier.yaml</code>.</p>
+<pre><code>schema_version: "0.1"
+project: {id: agent-harness, name: Agent Harness Watch}
 sources:
-  local_library:
-    enabled: true
-    roots: [data/library]
-profile:
-  topics:
-    - id: research-agents
-      description: Research agents and persistent memory
-      weight: 1.0
-ranking:
-  gates: []
-  features:
-    citation: {enabled: false, weight: 0.0}
-brief:
-  target_duration_seconds: 300
-  maximum_seconds_per_development: 300
-  outputs: [html, slides]
-rendering:
-  video: {enabled: false}</code></pre><p><code>roots</code> 以 YAML 所在資料夾為基準。本地 PDF 沒有可靠引用數時，關閉 citation 特徵比硬設門檻合理。完整預設與型別請執行 <code>frontier schema config --format json</code>。</p></section>
-<section><h2>各區塊做什麼</h2><table><thead><tr><th>區塊</th><th>設定與後果</th></tr></thead><tbody>
-<tr><td><code>project</code></td><td>名稱、輸出語言、內部 <code>workspace_dir</code>（預設 <code>.frontier</code>）、公開 <code>output_dir</code>（預設 <code>frontier_output</code>）。語言欄位不會自動翻譯原文。</td></tr>
-<tr><td><code>sources</code></td><td>啟用本地庫、arXiv、Semantic Scholar 或 OpenReview。只填 URL 仍需選對來源；Config Skill 可將指定 arXiv PDF 存入本地庫供全文與圖像分析。</td></tr>
-<tr><td><code>tracking</code></td><td><code>scholars</code> 與 <code>venues</code> 使用來源穩定 ID；同名學者須確認。Google Scholar live adapter 尚未實作。</td></tr>
-<tr><td><code>profile</code></td><td><code>topics[].description/weight</code> 與 <code>keywords.include/exclude</code> 表示研究興趣；關鍵字只輔助初篩。</td></tr>
-<tr><td><code>ranking</code></td><td><code>gates</code> 決定可否入選；<code>features.*.weight</code> 對合格論文排序。分數不是品質、可信度或接受機率。</td></tr>
-<tr><td><code>sync</code></td><td><code>trigger_mode: manual</code>，以最近成功同步的 cursor 比較。來源失敗可選 <code>fail</code> 或 <code>partial</code>。</td></tr>
-<tr><td><code>brief</code></td><td><code>target_duration_seconds</code> 預設 300，可自訂；<code>outputs</code> 選 HTML、slides、video；<code>maximum_developments</code> 限一次選幾篇。</td></tr>
-<tr><td><code>review</code></td><td>控制缺證據、無來源數字、重複等是否阻擋；不能語意判斷主張是否真的受原文支持。</td></tr>
-<tr><td><code>rendering.video</code></td><td>預設關閉；開啟前需備旁白服務並同意可能的費用。這次 AutoSci 不測影片。</td></tr>
-</tbody></table></section>
-<section><h2>持續追蹤研究主題</h2><pre><code>sources:
   openalex: {enabled: true, mode: live, max_results: 200}
 profile:
   topics:
-    - id: ai-agent-harness
-      description: AI agent harness and execution environments
+    - id: agent-harness
+      description: execution harnesses for AI coding agents
       search:
         providers: [openalex]
-        query: '"AI agent" AND harness'
-        published_from: 2025-01-01
-        published_to: 2025-12-31</code></pre><p>下次調整年份時保留相同主題 ID。<code>max_results</code> 是每個主題的上限；若結果截斷，不可聲稱已完整找出新增論文。alphaXiv 另需啟用 <code>sources.alphaxiv</code>，並在 <code>search.keywords</code> 設定 3–4 個詞。API key 只放環境變數，不放 YAML。</p></section>
-<section><h2>Gate 和權重</h2><p>Gate 先回答「能不能進候選清單？」權重再決定入選後的排列。新預印本往往沒有 citation count，不應套固定最低引用數；可以用 <code>on_fail: warn</code> 或新論文豁免。</p><pre><code>ranking:
+        query: 'agent harness coding'
+        published_from: 2026-01-01
+brief:
+  outputs: [html, slides]</code></pre><p>Dates use <code>YYYY-MM-DD</code>. The OpenAlex query searches title, abstract, and keywords; the topic description and profile keywords drive the separate local relevance score.</p></section>
+
+<section id="project"><h2>Project and schema</h2><table><thead><tr><th>Field</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>schema_version</code></td><td><code>"0.1"</code> only. Rejects incompatible schemas.</td></tr>
+<tr><td><code>project.id</code></td><td>Required stable project slug; Setup derives one from the workspace name.</td></tr>
+<tr><td><code>project.name</code></td><td>Required display name; Setup uses the workspace name unless told otherwise.</td></tr>
+<tr><td><code>project.timezone</code></td><td><code>UTC</code>. Stored in config; current run timestamps remain UTC, so this does not change scheduling or date filtering.</td></tr>
+<tr><td><code>project.language</code></td><td><code>en</code>. Language tag used in briefing output; it does not translate source text or guarantee translated narration.</td></tr>
+<tr><td><code>project.workspace_dir</code></td><td><code>.frontier</code>. Internal runs, cache, and state directory.</td></tr>
+<tr><td><code>project.output_dir</code></td><td><code>frontier_output</code>. Public Discovery and briefing files.</td></tr>
+</tbody></table></section>
+
+<section id="sources"><h2>Sources</h2><p>Every source starts disabled. Set <code>enabled: true</code> and, for remote sources, <code>mode: live</code> before expecting network results. Fixture mode requires a JSON <code>fixture_path</code>; it is for testing, not a substitute for a live subscription. Provider keys and passwords never belong in YAML; see <a href="credentials.html">Credentials</a>.</p>
+<table><thead><tr><th>Source</th><th>Live behavior and required target</th></tr></thead><tbody>
+<tr><td><code>sources.openalex</code></td><td>Topic works search. Requires at least one <code>profile.topics[].search.providers</code> containing <code>openalex</code>. Paginates each bounded query up to <code>max_results</code>; reports truncation. API key optional for basic use.</td></tr>
+<tr><td><code>sources.alphaxiv</code></td><td>MCP <code>discover_papers</code> for a topic; requires a topic provider entry and 3–4 <code>search.keywords</code>. Needs an API key for this harness's headless client. Returns a small ranked top-k, never a complete corpus.</td></tr>
+<tr><td><code>sources.arxiv</code></td><td>arXiv Atom API. Live mode requires <code>paper_ids</code>, <code>queries</code>, or <code>categories</code>. It does not use <code>profile.topics[].search</code> to form its query.</td></tr>
+<tr><td><code>sources.semantic_scholar</code></td><td>Tracks papers of stable Semantic Scholar author IDs from <code>tracking.scholars</code>. It is not a general keyword search adapter. API key optional, subject to upstream limits.</td></tr>
+<tr><td><code>sources.openreview</code></td><td>OpenReview API 2 submission invitations for <code>tracking.venues</code>. Requires a token or username and password. Venue selection does not automatically cover every conference or year.</td></tr>
+<tr><td><code>sources.local_library</code></td><td>Reads files under configured local roots, no remote credential. PDF uses PyMuPDF; Markdown and text use a plain-text parser.</td></tr>
+</tbody></table>
+<h3>Common remote-source fields</h3><p>The following fields belong to <code>sources.semantic_scholar</code>, <code>sources.arxiv</code>, <code>sources.openalex</code>, and <code>sources.alphaxiv</code>. A field may be accepted by the shared schema but only used by some adapters; the last column is explicit about that.</p>
+<table><thead><tr><th>Field within source</th><th>Default / actual use</th></tr></thead><tbody>
+<tr><td><code>enabled</code></td><td><code>false</code>; disabled source is skipped.</td></tr>
+<tr><td><code>mode</code></td><td><code>fixture</code> or <code>live</code>; default <code>fixture</code>.</td></tr>
+<tr><td><code>fixture_path</code></td><td>Unset. Required when an enabled source uses fixture mode; path relative to the config file.</td></tr>
+<tr><td><code>overlap_days</code></td><td><code>3</code>; accepted but the current live adapters re-query their scope and do not use this overlap setting.</td></tr>
+<tr><td><code>api_key_env</code></td><td>Unset. Name of an environment variable, not the secret itself. OpenAlex and Semantic Scholar use it if present; alphaXiv falls back to <code>ALPHAXIV_API_KEY</code> and requires a value in live mode; arXiv ignores it.</td></tr>
+<tr><td><code>base_url</code></td><td>Unset; adapters use their built-in endpoints. Set only for a compatible endpoint or test server.</td></tr>
+<tr><td><code>user_agent</code></td><td><code>FrontierOps/0.1</code>; sent by arXiv, Semantic Scholar, and OpenAlex HTTP adapters, not the MCP client.</td></tr>
+<tr><td><code>request_timeout_seconds</code></td><td><code>30</code>, positive; per-request HTTP/MCP timeout.</td></tr>
+<tr><td><code>request_delay_seconds</code></td><td><code>3.0</code>, nonnegative; pause between arXiv/OpenAlex pages. Not currently used by Semantic Scholar or alphaXiv.</td></tr>
+<tr><td><code>page_size</code></td><td><code>100</code>, 1–1000 in schema. OpenAlex caps each actual API page at 100; arXiv and Semantic Scholar use it. alphaXiv MCP has no pagination here.</td></tr>
+<tr><td><code>max_results</code></td><td><code>100</code>, positive; arXiv/Semantic Scholar query cap, OpenAlex cap per topic, alphaXiv clip of its returned top-k list.</td></tr>
+<tr><td><code>paper_ids</code></td><td>Empty list; arXiv ID list only. Other live adapters ignore it.</td></tr>
+<tr><td><code>queries</code></td><td>Empty list; arXiv search expressions only. Other live adapters ignore it.</td></tr>
+<tr><td><code>categories</code></td><td>Empty list; arXiv category terms such as <code>cs.AI</code> only. Other live adapters ignore it.</td></tr>
+</tbody></table>
+<h3>Local library and OpenReview fields</h3><table><thead><tr><th>Field</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>sources.local_library.enabled</code></td><td><code>false</code>; local files are skipped until enabled.</td></tr>
+<tr><td><code>sources.local_library.roots</code></td><td>Empty list. Directories to scan, relative to <code>frontier.yaml</code> unless absolute.</td></tr>
+<tr><td><code>sources.local_library.recursive</code></td><td><code>true</code>; walk nested directories.</td></tr>
+<tr><td><code>sources.local_library.allowed_extensions</code></td><td><code>[.pdf, .md, .txt]</code>; only these three extension values are valid.</td></tr>
+<tr><td><code>sources.local_library.allow_outside_project_root</code></td><td><code>false</code>; prevents roots or followed files from escaping the project. Enable only if deliberate.</td></tr>
+<tr><td><code>sources.openreview.enabled</code></td><td><code>false</code>; OpenReview is skipped until enabled.</td></tr>
+<tr><td><code>sources.openreview.mode</code></td><td><code>fixture</code> by default; <code>live</code> uses API 2.</td></tr>
+<tr><td><code>sources.openreview.fixture_path</code></td><td>Unset; required for enabled fixture mode.</td></tr>
+<tr><td><code>sources.openreview.base_url</code></td><td><code>https://api2.openreview.net</code>; API 2 endpoint.</td></tr>
+<tr><td><code>sources.openreview.username_env</code></td><td><code>OPENREVIEW_USERNAME</code>; environment-variable name for account username/email.</td></tr>
+<tr><td><code>sources.openreview.password_env</code></td><td><code>OPENREVIEW_PASSWORD</code>; environment-variable name for account password.</td></tr>
+<tr><td><code>sources.openreview.token_env</code></td><td><code>OPENREVIEW_TOKEN</code>; environment-variable name for an existing API 2 session token. Token takes precedence over username/password.</td></tr>
+<tr><td><code>sources.openreview.include_replies</code></td><td><code>true</code>; request replies so decisions and review context can be read.</td></tr>
+</tbody></table></section>
+
+<section id="tracking"><h2>Scholar and venue tracking</h2><p><code>tracking.scholars</code> and <code>tracking.venues</code> default to empty lists. Display names are not stable identities. Currently, live scholar fetching is implemented only for Semantic Scholar author IDs; <code>google_scholar</code> is accepted in the schema but has no live adapter.</p>
+<table><thead><tr><th>Field within item</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>tracking.scholars[].id</code></td><td>Required local stable ID for your subscription.</td></tr>
+<tr><td><code>tracking.scholars[].name</code></td><td>Required display name; not used as the remote lookup key.</td></tr>
+<tr><td><code>tracking.scholars[].aliases</code></td><td>Empty list; stored for identity context, not used by the live fetcher.</td></tr>
+<tr><td><code>tracking.scholars[].identities</code></td><td>Required mapping; set <code>semantic_scholar: &lt;author-id&gt;</code> to use the current live author adapter.</td></tr>
+<tr><td><code>tracking.scholars[].providers</code></td><td>Required list of <code>semantic_scholar</code>, <code>arxiv</code>, or <code>google_scholar</code>; only Semantic Scholar author tracking is currently wired to a live scholar-specific fetcher.</td></tr>
+<tr><td><code>tracking.scholars[].backfill_days</code></td><td><code>365</code>; accepted but not applied by the current author fetcher.</td></tr>
+<tr><td><code>tracking.scholars[].always_include_new_publications</code></td><td><code>true</code>; accepted, but no bypass of ranking Gates is currently implemented.</td></tr>
+<tr><td><code>tracking.venues[].provider</code></td><td>Required literal <code>openreview</code>.</td></tr>
+<tr><td><code>tracking.venues[].venue_id</code></td><td>Required exact OpenReview group ID, including year, such as <code>ICLR.cc/2026/Conference</code>.</td></tr>
+<tr><td><code>tracking.venues[].decisions</code></td><td>Empty list means no decision filter. When nonempty, the current adapter filters only notes with a detected decision; notes without one remain, so do not treat this as a strict accepted-only guarantee.</td></tr>
+</tbody></table></section>
+
+<section id="profile"><h2>Research profile and topic search</h2><p><code>profile</code> defaults to empty topics and keyword lists. <code>profile.topics[].search</code> is optional until a topic provider is enabled. Topic search determines what OpenAlex/alphaXiv request; the topic description and include keywords separately determine the local lexical relevance feature. The search query is not a perfect semantic relevance gate.</p>
+<table><thead><tr><th>Field</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>profile.topics[].id</code></td><td>Required stable topic ID; keep it unchanged across runs to compare the same interest.</td></tr>
+<tr><td><code>profile.topics[].description</code></td><td>Required description; its words become weighted lexical relevance terms.</td></tr>
+<tr><td><code>profile.topics[].weight</code></td><td><code>1.0</code>, nonnegative; weights description terms in lexical relevance, not the API query or final score directly.</td></tr>
+<tr><td><code>profile.topics[].search.providers</code></td><td>Empty list; choose <code>openalex</code>, <code>alphaxiv</code>, or both. The corresponding source must also be enabled in live mode.</td></tr>
+<tr><td><code>profile.topics[].search.query</code></td><td>Required when <code>search</code> exists. Sent to OpenAlex title/abstract/keywords search and as alphaXiv's semantic question.</td></tr>
+<tr><td><code>profile.topics[].search.keywords</code></td><td>Empty list; alphaXiv requires exactly 3–4 concise terms. OpenAlex does not use this list.</td></tr>
+<tr><td><code>profile.topics[].search.published_from</code></td><td>Unset; inclusive lower publication-date boundary.</td></tr>
+<tr><td><code>profile.topics[].search.published_to</code></td><td>Unset; inclusive upper publication-date boundary; cannot precede <code>published_from</code>.</td></tr>
+<tr><td><code>profile.topics[].search.alphaxiv_difficulty</code></td><td><code>5</code>, 1–10; retrieval-effort setting for alphaXiv only.</td></tr>
+<tr><td><code>profile.keywords.include</code></td><td>Empty list; contributes English/alphanumeric terms to lexical relevance.</td></tr>
+<tr><td><code>profile.keywords.exclude</code></td><td>Empty list; matching text forces lexical relevance to 0, but is not itself a hard exclusion. Add a relevance Gate if a hard cutoff is needed.</td></tr>
+</tbody></table></section>
+
+<section id="ranking"><h2>Gates and ranking</h2><p>A Gate decides whether a candidate is excluded, warned, or exempted; enabled <code>ranking.features</code> weights order candidates afterward. A score measures the configured heuristic, not scientific quality. <code>ranking.gates</code> defaults to an empty list: no paper is excluded by default.</p>
+<pre><code>ranking:
   gates:
-    - id: citations
-      type: citation
-      minimum_count: 3
-      exempt_if_age_days_lte: 90
-      on_fail: warn</code></pre></section>
-<section><h2>候選設定檔</h2><p><code>.frontier/config-drafts/*.candidate.yaml</code> 是 Config Skill 做 validate 和 diff 用的提案；它不會被 Sync 讀取。確認後 Agent 才把變更套用到 <code>frontier.yaml</code>。保留候選檔有助於追溯修改，但日常只需看 active YAML。</p></section>
+    - {id: recent, type: publication_year, min_year: 2025, on_fail: exclude}
+    - {id: citations, type: citation, minimum_count: 3, exempt_if_age_days_lte: 90, on_fail: warn}
+    - {id: topical, type: relevance, minimum: 0.25, on_fail: exclude}</code></pre>
+<table><thead><tr><th>Field</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>ranking.gates[].id</code></td><td>Required label shown in the Gate trace.</td></tr>
+<tr><td><code>ranking.gates[].type</code></td><td>Required: <code>publication_year</code>, <code>citation</code>, or <code>relevance</code>.</td></tr>
+<tr><td><code>ranking.gates[].enabled</code></td><td><code>true</code>; disabled Gate is reported as exempt.</td></tr>
+<tr><td><code>ranking.gates[].on_fail</code></td><td><code>exclude</code> or <code>warn</code>; default <code>exclude</code>.</td></tr>
+<tr><td><code>ranking.gates[].min_year</code></td><td>Required for <code>publication_year</code>; missing publication year fails the Gate.</td></tr>
+<tr><td><code>ranking.gates[].minimum_count</code></td><td>Required nonnegative citation threshold for <code>citation</code>. Missing citation data warns regardless of <code>on_fail</code>.</td></tr>
+<tr><td><code>ranking.gates[].exempt_if_age_days_lte</code></td><td><code>0</code>; exempt a paper this many days old or newer from a citation Gate when age is known.</td></tr>
+<tr><td><code>ranking.gates[].minimum</code></td><td>Required 0–1 lexical score threshold for <code>relevance</code>.</td></tr>
+<tr><td><code>ranking.features.lexical_relevance</code></td><td><code>{enabled: true, weight: 0.55}</code>; title + abstract overlap with description/include terms.</td></tr>
+<tr><td><code>ranking.features.citation</code></td><td><code>{enabled: true, weight: 0.15}</code>; logarithmic citation count, clipped at 1.</td></tr>
+<tr><td><code>ranking.features.freshness</code></td><td><code>{enabled: true, weight: 0.15}</code>; decay from publication date.</td></tr>
+<tr><td><code>ranking.features.reliability</code></td><td><code>{enabled: true, weight: 0.15}</code>; configured value for the source provider; an absent provider value contributes 0.</td></tr>
+<tr><td><code>ranking.features.*.enabled</code></td><td>Boolean switch for each feature.</td></tr>
+<tr><td><code>ranking.features.*.weight</code></td><td>Nonnegative weight. Enabled weights are normalized by their sum; all zero weights give a score of 0.</td></tr>
+<tr><td><code>ranking.citation_scale</code></td><td><code>100</code>, positive; count at which the citation feature reaches 1.</td></tr>
+<tr><td><code>ranking.freshness_half_life_days</code></td><td><code>180</code>, positive; freshness halves after this many days.</td></tr>
+<tr><td><code>ranking.source_reliability</code></td><td>Empty mapping; provider names to numeric feature values. Prefer 0–1 values; the schema does not enforce that range.</td></tr>
+<tr><td><code>ranking.deep_enrich_top_k</code></td><td><code>5</code>, positive; attempt deterministic explanation/full-text enrichment for the top eligible candidates.</td></tr>
+<tr><td><code>ranking.max_fulltext_pages</code></td><td><code>20</code>, positive; limit local full-text pages used for enrichment/visual extraction. Does not cap an alphaXiv MCP response.</td></tr>
+</tbody></table></section>
+
+<section id="sync"><h2>Sync policy</h2><p>Sync runs only after a researcher requests Discover or an operator invokes the CLI. The current implementation compares stable provider IDs and content fingerprints with saved state; topical searches also preserve every current observation for cross-run comparison.</p>
+<table><thead><tr><th>Field</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>sync.trigger_mode</code></td><td>Only <code>manual</code> is accepted; no scheduler.</td></tr>
+<tr><td><code>sync.baseline</code></td><td>Only <code>last_successful_sync</code> is accepted; current state is stored in <code>.frontier/state/</code>.</td></tr>
+<tr><td><code>sync.default_lookback_days</code></td><td><code>14</code>; accepted but not yet applied to live provider queries.</td></tr>
+<tr><td><code>sync.on_provider_error</code></td><td><code>fail</code> or <code>partial</code>; default <code>fail</code>. Current Sync does not yet implement partial recovery; a provider exception stops the run in either mode.</td></tr>
+<tr><td><code>sync.preserve_raw_responses</code></td><td><code>true</code>; accepted, but the current repository always caches normalized source-record snapshots, not the original HTTP response body.</td></tr>
+</tbody></table></section>
+
+<section id="brief"><h2>Briefing and Review</h2><table><thead><tr><th>Field</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>brief.target_duration_seconds</code></td><td><code>300</code> (five minutes), positive; set any desired target in seconds.</td></tr>
+<tr><td><code>brief.maximum_developments</code></td><td><code>5</code>, positive; maximum selected developments in one draft.</td></tr>
+<tr><td><code>brief.maximum_seconds_per_development</code></td><td><code>75</code>, positive; cap for each paper's section. Raise this as well when requesting a longer single-paper briefing.</td></tr>
+<tr><td><code>brief.narration_words_per_minute</code></td><td><code>140</code>, positive; caps draft narration words from the allocated seconds.</td></tr>
+<tr><td><code>brief.outputs</code></td><td><code>[html, slides, video]</code> at schema level; Setup writes <code>[html, slides]</code>. Choose any combination of those values. Video additionally requires <code>rendering.video.enabled</code>.</td></tr>
+<tr><td><code>review.required</code></td><td><code>true</code>; stored but does not bypass the current Brief → Review → Render requirement if set false.</td></tr>
+<tr><td><code>review.fail_on_missing_evidence</code></td><td><code>true</code>; controls error versus warning for missing factual claim evidence. The strict briefing schema still rejects factual claims without references.</td></tr>
+<tr><td><code>review.fail_on_broken_source</code></td><td><code>true</code>; block unknown Evidence IDs when true.</td></tr>
+<tr><td><code>review.fail_on_unsupported_number</code></td><td><code>true</code>; block numbers absent from cited Evidence. This is a string-level check, not semantic fact checking.</td></tr>
+<tr><td><code>review.fail_on_duration_over_budget</code></td><td><code>true</code>; block sections whose total duration exceeds the target.</td></tr>
+<tr><td><code>review.fail_on_duplicate_development</code></td><td><code>true</code>; block repeated development IDs or headlines.</td></tr>
+<tr><td><code>review.auto_fix</code></td><td><code>safe_only</code> or <code>none</code>; safe normalization trims headings/claims and deduplicates Evidence IDs, not research claims.</td></tr>
+</tbody></table></section>
+
+<section id="video"><h2>Optional video preview</h2><p><code>rendering.video</code> is disabled by default. Enabling it requires a path to a HeyGen TTS adapter script and may incur external service costs. A generated HyperFrames HTML preview is not a rendered MP4.</p>
+<table><thead><tr><th>Field</th><th>Default / effect</th></tr></thead><tbody>
+<tr><td><code>rendering.video.enabled</code></td><td><code>false</code>; must be true in addition to including <code>video</code> in <code>brief.outputs</code>.</td></tr>
+<tr><td><code>rendering.video.provider</code></td><td>Only <code>hyperframes</code> accepted; schema marker.</td></tr>
+<tr><td><code>rendering.video.tts_provider</code></td><td>Only <code>heygen</code> accepted; schema marker.</td></tr>
+<tr><td><code>rendering.video.heygen_tts_script</code></td><td>Unset; required when enabled. Executable adapter path, relative to the config directory if not absolute.</td></tr>
+<tr><td><code>rendering.video.voice_id</code></td><td>Unset; passed to the TTS adapter when provided.</td></tr>
+<tr><td><code>rendering.video.language</code></td><td>Unset; narration language override, otherwise inferred from script.</td></tr>
+<tr><td><code>rendering.video.width</code></td><td><code>1920</code>, positive; preview canvas width.</td></tr>
+<tr><td><code>rendering.video.height</code></td><td><code>1080</code>, positive; preview canvas height.</td></tr>
+<tr><td><code>rendering.video.fps</code></td><td><code>30</code>; allowed 24, 30, 60. Accepted but not currently used by preview generation.</td></tr>
+<tr><td><code>rendering.video.quality</code></td><td><code>looks</code>; allowed <code>draft</code>, <code>looks</code>, <code>delivery</code>. Accepted but not currently used by preview generation.</td></tr>
+</tbody></table></section>
 </article></div></main></body></html>
