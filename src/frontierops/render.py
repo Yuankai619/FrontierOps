@@ -49,6 +49,7 @@ def run_render(run_dir: Path) -> Path:
             target = run_dir / "05-render/open-slide/assets" / source.name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, target)
+    paper_outputs = _render_paper_outputs(briefing, evidence, visuals, run_dir)
     preview_path = _prepare_video_preview(config, briefing, evidence, visuals, run_dir, resolution)
     status = "partial" if output.missing_targets else "success"
     render_result = {
@@ -56,6 +57,7 @@ def run_render(run_dir: Path) -> Path:
         "outputs": {target: paths[target] for target in output.documents},
         "claim_fingerprints": output.claim_fingerprints,
         "missing_targets": output.missing_targets,
+        "papers": paper_outputs,
     }
     if preview_path:
         render_result["outputs"]["video_preview"] = preview_path
@@ -63,7 +65,7 @@ def run_render(run_dir: Path) -> Path:
     if not output_root.is_absolute():
         output_root = Path(resolution["source_path"]).parent / output_root
     public_dir = FilesystemOutputPublisher().publish(
-        run_dir, output_root, render_result["outputs"]
+        run_dir, output_root, render_result["outputs"], paper_outputs
     )
     render_result["public_output_dir"] = str(public_dir)
     store.write_json(Path("05-render/render-result.json"), render_result)
@@ -92,6 +94,43 @@ def run_render(run_dir: Path) -> Path:
     manifest["warnings"] = list(dict.fromkeys([*manifest["warnings"], *result.warnings]))
     store.write_json(Path("run-manifest.json"), manifest)
     return run_dir
+
+
+def _render_paper_outputs(briefing: BriefingSpec, evidence: list[Evidence],
+                          visuals: dict[str, dict], run_dir: Path) -> list[dict[str, str]]:
+    """Keep a separate portable HTML and OpenSlide project for each paper."""
+    store = FileArtifactStore(run_dir)
+    result: list[dict[str, str]] = []
+    targets = [target for target in briefing.render_targets if target in {"html", "slides"}]
+    for section in briefing.sections:
+        paper_spec = briefing.model_copy(update={
+            "artifact_id": f"{briefing.artifact_id}-{section.id}",
+            "title": section.headline, "sections": [section], "render_targets": targets,
+        })
+        documents = RenderService().execute(
+            paper_spec, evidence, [StaticHtmlRenderer(visuals), OpenSlideRenderer(visuals)]
+        ).documents
+        base = Path("05-render/papers") / section.id
+        output = {"section_id": section.id, "title": section.headline}
+        if "html" in documents:
+            path = base / "briefing.html"
+            store.write_text(path, documents["html"])
+            output["html"] = str(path)
+        if "slides" in documents:
+            project = base / "open-slide"
+            path = project / "slides/frontier-briefing/index.tsx"
+            store.write_text(path, documents["slides"])
+            for relative, content in OpenSlideRenderer.project_files().items():
+                store.write_text(project / relative, content)
+            visual = visuals.get(section.id)
+            if visual:
+                source = run_dir / "05-render" / str(visual["uri"])
+                target = run_dir / project / "assets" / source.name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+            output["slides"] = str(path)
+        result.append(output)
+    return result
 
 
 def _prepare_video_preview(

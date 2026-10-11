@@ -56,6 +56,10 @@ ranking:
             self.assertTrue((public / "index.html").is_file())
             self.assertIn("Paper2Video", (public / "html/index.html").read_text())
             self.assertTrue((public / "slides/package.json").is_file())
+            public_manifest = json.loads((public / "manifest.json").read_text())
+            self.assertEqual(len(public_manifest["papers"]), 1)
+            self.assertTrue((public / "papers/paper-1/html/index.html").is_file())
+            self.assertTrue((public / "papers/paper-1/slides/package.json").is_file())
             self.assertEqual(json.loads((public / "manifest.json").read_text())[
                 "video_finalized"], False)
             run_render(run)
@@ -81,3 +85,34 @@ ranking:
             manifest = json.loads((run / "run-manifest.json").read_text())
             self.assertEqual(manifest["status"], "failed")
             self.assertNotIn("approved_briefing", manifest["outputs"])
+
+    def test_two_papers_have_separate_public_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            papers = [
+                {"provider": "arxiv", "external_id": str(number), "version": "v1",
+                 "updated_at": "2026-05-01T00:00:00Z",
+                 "payload": {"title": f"Paper {number}",
+                             "abstract": "We propose a research method and show results."}}
+                for number in (1, 2)
+            ]
+            (root / "papers.json").write_text(json.dumps(papers), encoding="utf-8")
+            config = root / "frontier.yaml"
+            config.write_text("""\
+project: {id: multi, name: Multi}
+sources: {arxiv: {enabled: true, mode: fixture, fixture_path: papers.json}}
+brief: {maximum_developments: 5}
+""", encoding="utf-8")
+            run = run_review(run_brief(run_rank(run_sync(config))))
+            run_render(run)
+            result = json.loads((run / "05-render/render-result.json").read_text())
+            public = Path(result["public_output_dir"])
+            self.assertEqual(len(result["papers"]), 2)
+            for item in result["papers"]:
+                paper = public / "papers" / item["section_id"]
+                self.assertTrue((paper / "html/index.html").is_file())
+                self.assertTrue((paper / "slides/package.json").is_file())
+                html = (paper / "html/index.html").read_text()
+                self.assertIn(item["title"], html)
+                other = "Paper 1" if item["title"] == "Paper 2" else "Paper 2"
+                self.assertNotIn(other, html)
