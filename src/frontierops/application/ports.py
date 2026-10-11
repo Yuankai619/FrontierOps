@@ -9,6 +9,10 @@ class ConfigReader(Protocol):
     def read(self, path: Path) -> Mapping[str, Any]: ...
 
 
+class ConfigWriter(Protocol):
+    def write(self, path: Path, payload: Mapping[str, Any]) -> None: ...
+
+
 class RunRepository(Protocol):
     def save(self, workspace: Path, run_id: str, files: Mapping[str, Any]) -> Path: ...
 

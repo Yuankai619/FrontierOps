@@ -1,27 +1,71 @@
-"""FrontierOps command-line entry point."""
+"""FrontierOps command-line driving adapter."""
 
 import argparse
+from dataclasses import asdict
+import json
 from pathlib import Path
 import sys
 
 from pydantic import ValidationError
 
 from frontierops.build import run_build
+from frontierops.config import config_service
 
 
-def main(argv: list[str] | None = None) -> int:
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="frontier")
     commands = parser.add_subparsers(dest="command", required=True)
     build = commands.add_parser("build", help="validate config and initialize a run")
     build.add_argument("--config", type=Path, required=True)
-    args = parser.parse_args(argv)
 
+    schema = commands.add_parser("schema", help="print a JSON schema")
+    schema_commands = schema.add_subparsers(dest="resource", required=True)
+    schema_config = schema_commands.add_parser("config")
+    schema_config.add_argument("--format", choices=["json"], default="json")
+
+    config = commands.add_parser("config", help="manage validated configuration")
+    actions = config.add_subparsers(dest="action", required=True)
+    for name in ("inspect", "validate"):
+        command = actions.add_parser(name)
+        command.add_argument("--config", type=Path, default=Path("frontier.yaml"))
+    diff = actions.add_parser("diff")
+    diff.add_argument("--old", type=Path, required=True)
+    diff.add_argument("--new", type=Path, required=True)
+    draft = actions.add_parser("draft")
+    draft.add_argument("--config", type=Path, default=Path("frontier.yaml"))
+    draft.add_argument("--output", type=Path, required=True)
+    apply = actions.add_parser("apply")
+    apply.add_argument("--candidate", type=Path, required=True)
+    apply.add_argument("--config", type=Path, default=Path("frontier.yaml"))
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
     try:
-        run_dir = run_build(args.config)
+        if args.command == "build":
+            print(run_build(args.config))
+            return 0
+        service = config_service()
+        if args.command == "schema":
+            print(json.dumps(service.schema(), indent=2, ensure_ascii=False))
+        elif args.action == "inspect":
+            print(json.dumps(service.inspect(args.config), indent=2, ensure_ascii=False))
+        elif args.action == "validate":
+            service.inspect(args.config)
+            print(f"valid: {args.config}")
+        elif args.action == "diff":
+            changes = [asdict(change) for change in service.diff(args.old, args.new)]
+            print(json.dumps(changes, indent=2, ensure_ascii=False))
+        elif args.action == "draft":
+            service.draft(args.config, args.output)
+            print(args.output)
+        elif args.action == "apply":
+            service.apply(args.candidate, args.config)
+            print(args.config)
     except (OSError, ValueError, ValidationError) as exc:
-        print(f"build failed: {exc}", file=sys.stderr)
+        print(f"{args.command} failed: {exc}", file=sys.stderr)
         return 2
-    print(run_dir)
     return 0
 
 
