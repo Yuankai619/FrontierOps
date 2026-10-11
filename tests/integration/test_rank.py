@@ -41,6 +41,11 @@ ranking:
             report = json.loads((second / "02-rank/ranking-report.json").read_text())
             self.assertEqual(report["counts"]["eligible"], 1)
             self.assertEqual(report["ranking"][0]["eligible"], True)
+            discovery = root / "frontier_output/discoveries" / f"{second.name}.html"
+            self.assertTrue(discovery.is_file())
+            self.assertIn("Paper2Video research presentation", discovery.read_text())
+            self.assertIn("citations", discovery.read_text())
+            self.assertEqual(json.loads((second / "run-manifest.json").read_text())["outputs"]["public_discovery_html"], str(discovery))
             explanations = [json.loads(line) for line in
                             (second / "02-rank/paper-explanations.jsonl").read_text().splitlines()]
             self.assertEqual(explanations[0]["title"], "Paper2Video research presentation")

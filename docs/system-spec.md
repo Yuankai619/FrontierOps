@@ -61,7 +61,7 @@
 ## Render 與影片核准邊界
 
 - Render 只讀取 `04-review/briefing.approved.json`，所有格式保存相同 claim fingerprints。
-- Render 會把可閱讀的 HTML、OpenSlide 專案與可用的 HyperFrames 預覽發布到 `project.output_dir/<run-id>/`，另附 `index.html` 與 `manifest.json`；公開目錄不含 Sync raw cache。重跑同一 Run 會建立帶序號的新目錄，不覆蓋既有成果。最終 MP4 與 preview 明確區分。
+- Render 會把可閱讀的 HTML、OpenSlide 專案與可用的 HyperFrames 預覽發布到 `project.output_dir/briefings/<run-id>/`，另附 `index.html` 與 `manifest.json`；公開目錄不含 Sync raw cache。重跑同一 Run 會建立帶序號的新目錄，不覆蓋既有成果。最終 MP4 與 preview 明確區分。
 - HTML adapter 是逐篇論文的互動閱讀介面：研究問題分頁、Evidence 展開、原文頁碼連結、可放大的論文圖。使用者應能先理解論文，再查核原文；不能只列靜態摘要卡。
 - Render 從已引用的本地 PDF 擷取附有 caption 與頁碼的原圖，記入 `assets-manifest.json.visuals`。找不到可驗證圖片時明示缺少素材，不生成貌似原圖的裝飾圖；圖像抽取失敗不得影響文字簡報。
 - Slides adapter 從同一份 `BriefingSpec` 與原圖素材產生 OpenSlide v2 的 React `Page[]` 專案，位於 `05-render/open-slide/`。頁面以論文問題、方法原圖、結果與限制組織；每頁只有一個主訊息，原圖必須標明 Figure 與頁碼。輸出 `index.tsx` 是可編輯 deck source；執行專案內 `npm run build` 才得到 `dist/` 靜態展示站，PDF 由 OpenSlide 工具列匯出。
@@ -80,6 +80,7 @@
 - Local library root 預設限制在 project 內；PDF Evidence 保存 page／bbox，文字 Evidence 保存 line locator。
 - OpenReview 使用官方 API v2 client，保存 forum、invitation、reply 與 decision provenance；認證只存在環境。
 - Rank 輸出 Evidence、合格／排除候選與可重現 ranking report；factual explanation 必須引用 abstract 或 page-level Evidence。
+- Discover 入口把 Sync＋Rank 結果呈現在 `project.output_dir/discoveries/<run-id>.html`，顯示合格／排除、每條 Gate、排序特徵與論文問題，不將分數說成品質或真偽機率。
 - Brief 將跨來源候選聚合成 persistent developments，抑制 unchanged items，並產生可調時間的 renderer-neutral spec。
 - Review 是發布邊界；schema、duration、duplicate、Evidence reference 與 numeric-support 錯誤都必須阻擋核准。
 - Video preview 驗收至少包含 HyperFrames lint、browser runtime、layout、caption safe zone、contrast 與人工 snapshot 檢查。

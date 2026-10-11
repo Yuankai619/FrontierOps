@@ -52,7 +52,7 @@ ranking:
             })
             self.assertEqual(render_result["missing_targets"], ["video"])
             public = Path(render_result["public_output_dir"])
-            self.assertEqual(public.parent, root / "frontier_output")
+            self.assertEqual(public.parent, root / "frontier_output/briefings")
             self.assertTrue((public / "index.html").is_file())
             self.assertIn("Paper2Video", (public / "html/index.html").read_text())
             self.assertTrue((public / "slides/package.json").is_file())
