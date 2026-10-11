@@ -41,11 +41,16 @@ class DocsSiteTests(unittest.TestCase):
                         self.assertIn(fragment, parse(destination).ids, href)
 
     def test_each_guide_topic_is_a_separate_page(self) -> None:
-        for filename in ("quick-start.html", "steps.html", "example.html",
-                         "configuration.html", "commands.html", "outputs.html"):
+        for filename in ("quick-start.html", "steps.html", "configuration.html",
+                         "credentials.html", "commands.html", "outputs.html"):
             with self.subTest(page=filename):
                 self.assertTrue((DOCS / filename).is_file())
                 self.assertIn('class="docs-nav"', (DOCS / filename).read_text())
+
+    def test_public_navigation_does_not_link_to_old_example(self) -> None:
+        for source in DOCS.glob("*.html"):
+            with self.subTest(page=source.name):
+                self.assertNotIn("example.html", source.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

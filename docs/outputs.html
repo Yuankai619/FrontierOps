@@ -1,31 +1,32 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>輸出與紀錄 — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
-<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
-<main class="container doc-page"><h1>輸出與紀錄</h1><p class="lead">設定、原始資料、每次執行與公開成果分開保存。不要從資料夾名稱猜最新輸出，應讀 Run manifest。</p>
-<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html">Quick Start</a><a href="steps.html">四個使用步驟</a><a href="example.html">AutoSci 範例</a><a href="configuration.html">frontier.yaml</a><a href="commands.html">指令參考</a><a href="outputs.html" aria-current="page">輸出與紀錄</a></nav><article class="docs-main">
-<section><h2>工作區結構</h2><pre><code>research-workspace/
-├── frontier.yaml                     # 唯一生效設定
-├── data/library/                    # 本地 PDF 與同名 .pdf.json
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Outputs and history — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
+<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">Documentation</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
+<main class="container doc-page"><h1>Outputs and history</h1><p class="lead">Configuration, source snapshots, runs, and published outputs are stored separately. Read the manifest rather than assuming the newest directory name is the output you want.</p>
+<div class="docs-layout"><nav class="docs-nav" aria-label="Documentation pages"><a href="quick-start.html">Quick Start</a><a href="steps.html">Workflow</a><a href="configuration.html">Configuration</a><a href="credentials.html">Credentials</a><a href="commands.html">CLI reference</a><a href="outputs.html" aria-current="page">Outputs and history</a></nav><article class="docs-main">
+<section><h2>Workspace layout</h2><pre><code>research-workspace/
+├── frontier.yaml                   # active configuration
+├── data/library/                  # local PDFs and optional .pdf.json metadata
 ├── .frontier/
-│   ├── config-drafts/              # Config 候選稿
-│   ├── state/                      # 上次成功 Sync 的 cursor
-│   ├── cache/raw/                  # 原始來源快照
+│   ├── config-drafts/            # proposed, not active, YAML
+│   ├── state/                    # Sync state and identity history
+│   ├── cache/raw/                # source response snapshots
 │   └── runs/&lt;run-id&gt;/
-│       ├── 01-sync/               # 新增、更新、重複數量
-│       ├── 02-rank/               # 候選、Evidence、選取檔
-│       ├── 03-brief/              # 可修訂草稿
-│       ├── 04-review/             # 審核結果
-│       ├── 05-render/             # 內部渲染結果
+│       ├── 00-build/             # resolved config
+│       ├── 01-sync/              # signals and topic observations
+│       ├── 02-rank/              # candidates, evidence, delta, selection
+│       ├── 03-brief/             # editable draft
+│       ├── 04-review/            # review report and approved spec
+│       ├── 05-render/            # render result
 │       └── run-manifest.json
 └── frontier_output/
     ├── discoveries/&lt;run-id&gt;.html
     └── briefings/&lt;run-id&gt;/
-        ├── index.html             # 成果目錄
-        ├── manifest.json          # 逐篇輸出路徑
+        ├── index.html
+        ├── manifest.json
         └── papers/paper-1/
             ├── html/index.html
-            └── slides/            # 可編輯 OpenSlide 專案</code></pre></section>
-<section><h2>Discover 之後</h2><p>一般來源顯示本次新／更新訊號；主題檢索另存 <code>01-sync/topic-observations.jsonl</code>，並對本次回傳的論文重新評分。<code>02-rank/topic-delta.json</code> 記錄與上次同主題 Run 的範圍、排名、Gate 及論文差異，公開 HTML 呈現同一份資料。若從 2025 改查 2026，「新納入範圍」不等於上次執行後才發表；「未回傳」也不等於撤稿。來源結果截斷時，差異不是全量。選取頁在本機服務模式下寫入 <code>02-rank/briefing-selection.json</code>；HTML 不是唯一紀錄，不需要資料庫。</p></section>
-<section><h2>Briefing 之後</h2><p><code>05-render/render-result.json.public_output_dir</code> 指向這次實際發布的資料夾。每篇 HTML 與 slide 專案在 <code>papers/paper-N/</code>，總覽版保留作舊流程相容。同一 Run 重做 Render 會產生帶序號的新公開資料夾，不覆蓋舊成果。</p><p>進入某篇的 <code>slides/</code> 執行：</p><pre><code>npm install
+            └── slides/              # editable OpenSlide source</code></pre><p>Directory names follow <code>project.workspace_dir</code> and <code>project.output_dir</code>; the tree shows their defaults. Files under a Run are created as stages execute. The Run manifest points to the resulting artifacts.</p></section>
+<section><h2>What changed?</h2><p><code>01-sync/research-signals.jsonl</code> records new or updated signals. For a topical search, <code>01-sync/topic-observations.jsonl</code> also records every paper returned this time, including unchanged ones, so Rank can compare the same topic again. <code>02-rank/topic-delta.json</code> stores scope, Gate, score, rank, and paper-status differences. A paper newly inside a changed date window is not necessarily newly published; a paper absent from a capped result set is not necessarily withdrawn. The Discovery HTML is a readable view of these artifacts.</p><p>The local selection server writes <code>02-rank/briefing-selection.json</code> after validating the Run and candidate IDs. The HTML file alone is not the database or the selection source of truth.</p></section>
+<section><h2>After Briefing</h2><p><code>05-render/render-result.json.public_output_dir</code> identifies the published directory. The public <code>manifest.json</code> lists paths for each paper; the aggregate root view remains for compatibility. Rendering the same Run again publishes a numbered directory rather than replacing earlier output. The video preview currently belongs to the whole Run, not an individual paper.</p><p>To check an OpenSlide project, enter a paper's <code>slides/</code> directory and run:</p><pre><code>npm install
 npm run sync:skills
-npm run build</code></pre><p>建置後在 OpenSlide 的 <code>/s/frontier-briefing</code> 路由展示；系統目前不自動匯出 PPTX 或 PDF。影片 preview 仍以整個 Run 為單位，未拆成逐篇成品。</p></section>
+npm run build</code></pre><p>Its browser route is <code>/s/frontier-briefing</code>. The harness does not automatically export PPTX, PDF slides, or an MP4.</p></section>
 </article></div></main></body></html>

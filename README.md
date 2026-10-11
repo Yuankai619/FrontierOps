@@ -1,14 +1,14 @@
 # FrontierOps
 
-FrontierOps 是給 Claude Code、Codex、GitHub Copilot CLI 等 Coding Agent 使用的研究簡報 Harness。研究人員用自然語言要求「設定研究範圍」、「看看新論文」或「解釋這篇論文」；Agent Skill 操作可追溯的 Python Harness。沒有背景排程：只有研究人員要求 Discover 時才執行 Sync，與上次成功同步比較。
+FrontierOps is a local, agent-agnostic harness for tracking research and explaining new papers. A researcher asks a coding agent to set up a workspace, configure a research scope, discover changes, and brief selected papers. The Python library handles reproducible runs, source adapters, ranking, evidence, review, and rendering. It does not run a background scheduler or require a new agent framework.
 
-首要成果是幫人理解論文的研究問題、方法、實驗支持與限制。可產生可互動 HTML、OpenSlide 原始投影片專案，以及在啟用影音相依與授權後的 HyperFrames 旁白預覽；預覽不等於已匯出的 MP4。
+The primary outcome is an evidence-linked explanation of each paper's question, method, experiments, and limitations. Outputs can include interactive HTML and an editable OpenSlide project. A narrated HyperFrames preview is optional; it is not automatically an exported video file.
 
-請從[專案首頁](docs/index.html)、[Quick Start](docs/quick-start.html)、[AutoSci 範例](docs/example.html)或[系統規格](docs/system-spec.md)開始。
+[Project site](docs/index.html) · [Documentation](docs/guide.html) · [Configuration reference](docs/configuration.html) · [CLI reference](docs/commands.html) · [System specification](docs/system-spec.md)
 
-## Quick Start：先安裝 Agent Skill plugin
+## Start with an Agent Skill
 
-選擇你使用的 Agent 安裝一次；以下安裝命令須待包含 plugin 的 PR 合併到預設分支後才能從遠端 repository 使用。本機開發可將 marketplace 來源改為這個 checkout 的絕對路徑。Copilot 指 GitHub **Copilot CLI**，不保證其他 Copilot 產品表面有相同命令。
+Install the FrontierOps plugin in your coding agent. The commands below refer to Claude Code, Codex CLI, and GitHub Copilot CLI; other Copilot surfaces may use different plugin mechanisms. Plugin installation makes the workflows available to the agent but does **not** install the Python package in your research workspace.
 
 ```bash
 # Claude Code
@@ -23,25 +23,28 @@ codex plugin add frontierops@frontierops
 copilot plugin install Yuankai619/FrontierOps:plugins/frontierops
 ```
 
-安裝 plugin 只讓 Agent 讀到工作流程；尚未安裝 Python Harness。開啟你的研究專案，對 Agent 說：「使用 `frontier-setup`，在這個 workspace 設定 FrontierOps。」若要明確呼叫 Skill：Claude Code 輸入 `/frontierops:frontier-setup`、Codex 輸入 `$frontier-setup`、Copilot CLI 輸入 `/frontierops/frontier-setup`；其餘三個 Skill 只需替換末尾名稱。Setup 會檢查環境，用 `uv` 安裝 Harness，執行 `frontier setup`，建立**實際可編輯的** `frontier.yaml` 和 `frontier_output/`；不覆蓋已有設定。`uv` 是必備前置工具，slides/video 另需 Node.js／npm。
+Open your research workspace in the agent and ask it to use `frontier-setup` (or simply say `setup`). Setup checks `uv`, installs the Python package as a uv tool when needed, and creates an active `frontier.yaml` and `frontier_output/`. It does not download papers. In a FrontierOps development checkout, use `uv sync --locked` and `uv run --locked frontier`; this executes from the checkout's virtual environment without copying source code into the research workspace.
 
-接著可依序對 Agent 說：
+Then use the four researcher-facing actions:
 
-1. 「用 `frontier-config` 追蹤我研究的主題／學者／會議，預設五分鐘、輸出 HTML 和 slides。」資訊不夠時 Agent 會詢問，不猜測學者 ID 或 Gate。設定先經驗證與差異檢查，才寫入 active YAML。
-2. 「用 `frontier-discover` 看看自上次以來有哪些新研究。」Agent 手動執行 Sync＋Rank，交付 `frontier_output/discoveries/<run-id>.html`；可搜尋、篩合格／排除、展開 Gate 與分數理由。沒有新論文或來源失敗也會明說。
-3. 「用 `frontier-briefing` 解釋這篇論文，做互動 HTML 與投影片。」Agent 對同一 Run 執行 Brief＋Review＋Render，交付 `frontier_output/briefings/<run-id>/`。影片需在設定中啟用，且旁白／MP4 額外受外部服務與核准限制。
+1. `setup` — initialize the workspace and harness.
+2. `config` — describe a topic, author, venue, or paper in natural language. The agent validates a proposed YAML change before applying it. If the request is underspecified, it asks a focused question.
+3. `discover` — explicitly run Sync and Rank, inspect the comparison with a previous run, and select papers in the Discovery page. Nothing syncs on a timer.
+4. `briefing` — explain selected papers against source evidence, pass Review, and publish per-paper HTML and slides. Video is optional and requires additional configuration.
 
-`frontier.yaml.example` 只是版本控管的**離線示例／測試資料**，不是 active config；日常操作讀寫的是 `frontier.yaml`。新建設定預設關閉 live 來源，Config 後才開始抓論文。所有 Gate、權重、追蹤名單、時間與輸出格式都在 YAML，不寫死在程式裡。
+See the [Quick Start](docs/quick-start.html) for host-specific invocation and installation details, [Workflow](docs/steps.html) for inputs and outputs, and [Credentials](docs/credentials.html) before enabling live sources. For complete YAML fields and defaults, use the [configuration reference](docs/configuration.html) or `frontier schema config --format json`.
 
-## Agent 如何操作 Harness
+`frontier.yaml` is the active configuration. `frontier.yaml.example` is only a checked-in offline fixture for development; Sync does not read it unless explicitly passed with `--config`. Candidate YAML files under `.frontier/config-drafts/` are proposals, not active configuration.
 
-研究人員只需四個 Skill；內部仍保持可重現的 `Build → Sync → Rank → Brief → Review → Render`，每一步輸出標準 Artifacts 與 Run Manifest，方便除錯。Review 是發布閘門：檢查 Evidence 引用、數字、重複與時間；通過才渲染。原文 Figure／關鍵段落優先於裝飾圖，找不到可靠圖時明示缺漏。
+## What the harness stores
 
-每次 Run 保存在 `.frontier/runs/<run-id>/`，同步狀態在 `.frontier/state/`，原始來源快照在 `.frontier/cache/raw/`；公開成果在 `frontier_output/`。舊 Run 不因下一次 Sync 被覆蓋。系統採 Hexagonal Architecture：`domain/` 定義契約，`application/` 編排用例與 ports，`adapters/` 對接來源、儲存及 renderers。
+Each execution has its own directory under `.frontier/runs/<run-id>/` with its resolved configuration, stage results, evidence, and manifest. Sync state and source snapshots live under `.frontier/state/` and `.frontier/cache/raw/`. Published Discovery and briefing pages live in `frontier_output/`. A later run does not overwrite the earlier run. Discovery distinguishes papers newly published since the last run from papers newly included because the query window changed; incomplete source coverage is labeled.
 
-### 離線端到端驗收
+The architecture follows hexagonal boundaries: `domain/` contains contracts and policy, `application/` contains use cases, and `adapters/` connect APIs, files, and renderers. The agent Skills are the researcher interface; the CLI exposes internal stages for reproducibility and debugging.
 
-開發者要在 clone 的 repo 中跑**無 API key 的離線端到端驗收**，才使用 `frontier.yaml.example`。它引用版控內的 fixture，不會修改研究人員的 active `frontier.yaml`。`sync` 印出的絕對 Run 路徑須帶入後面每一步：
+## Developer check
+
+Run these from the repository root. The checked-in fixture is offline and needs no API key. Pass the absolute path printed by `sync` to each later stage.
 
 ```bash
 uv sync --locked
@@ -53,4 +56,6 @@ uv run --locked frontier render --run <run-path>
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-驗收時開啟 `frontier_output/discoveries/<run-id>.html` 與 `frontier_output/briefings/<run-id>/index.html`；在公開成果的 `slides/` 中用 `npm install`、`npm run sync:skills`、`npm run build` 驗收 OpenSlide。預設 fixture 未設 HeyGen 授權，不應期待最終 MP4。完整命令與 YAML 欄位見[指令參考](docs/commands.html)與[設定說明](docs/configuration.html)；變更規範見[AGENTS.md](AGENTS.md)。所有程式變動須以英文摘要式標題、繁體中文描述的 Pull Request 提交，每 PR 不超過 600 行 source／test／docs 變動。
+For the OpenSlide project, enter its `slides/` directory and run `npm install`, `npm run sync:skills`, and `npm run build`. HTML and slide source are the standard handoff; MP4 export is not part of this check.
+
+All implementation changes go through a pull request with a concise English title and Traditional Chinese description. Keep each PR under 600 changed source, test, and documentation lines, excluding generated artifacts and lockfiles. See [AGENTS.md](AGENTS.md) for the complete contribution rules.

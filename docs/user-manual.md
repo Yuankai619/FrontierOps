@@ -1,12 +1,12 @@
-# 使用文件
+# User documentation
 
-使用說明已拆成獨立頁面：
+The public documentation is organized into separate English pages:
 
-- [Quick Start](quick-start.html)：環境與安裝。
-- [四個使用步驟](steps.html)：Setup、Config、Discover、Briefing。
-- [AutoSci 範例](example.html)：實際對話。
-- [frontier.yaml](configuration.html)：設定欄位。
-- [指令參考](commands.html)：Harness CLI。
-- [輸出與紀錄](outputs.html)：Run、選取與成果位置。
+- [Quick Start](quick-start.html): plugin installation and workspace initialization.
+- [Workflow](steps.html): Setup, Config, Discover, and Briefing.
+- [Configuration](configuration.html): `frontier.yaml` fields and defaults.
+- [Credentials](credentials.html): provider authentication and secret handling.
+- [CLI reference](commands.html): internal harness commands and their artifacts.
+- [Outputs and history](outputs.html): run state, selection, and published work.
 
-從[文件入口](guide.html)也可依序閱讀。
+Start from the [documentation index](guide.html). The [system specification](system-spec.md) describes architecture and artifact contracts.
