@@ -1,91 +1,88 @@
-# FrontierOps 動態系統規格
+# FrontierOps System Specification
 
-## 產品目標
+This document describes the current experimental harness and its design boundaries. It is not a claim that every field accepted by the configuration schema is already operational; [Configuration](configuration.html) marks reserved or partially implemented fields.
 
-使用者主動執行 Sync 後，FrontierOps 應協助研究人員快速理解新研究。Briefing 預設為 300 秒但可由設定調整；HTML、slides 與旁白影片都必須由同一份已核准 `BriefingSpec` 產生。
+## Product goal and boundary
 
-## Hexagonal Architecture
+FrontierOps helps a researcher understand new work after an explicitly requested Discovery run. The default briefing budget is 300 seconds, but the researcher can set another duration. Interactive HTML, OpenSlide source, and an optional narrated preview derive from one reviewed `BriefingSpec`. The harness uses an existing coding agent through portable Skills; it does not embed an LLM client, agent framework, or background scheduler.
 
-- **Domain** 擁有純粹的設定與 artifact 契約，不依賴外層模組。
-- **Application** 擁有 use cases，並定義基礎設施必須實作的 ports。
-- **Adapters** 實作 YAML、檔案系統、時間、資料來源、renderer 與使用者介面。
-- `frontierops.build` 等頂層模組是 composition root；CLI 只是 driving adapter，不放業務規則。
-- 依賴只朝核心流動：`adapters -> application -> domain`。
+The researcher-facing actions are `Setup → Config → Discover → Briefing`. The reproducible internal stages are `Build → Sync → Rank → Brief → Review → Render`. Setup initializes a real `frontier.yaml`; Config proposes and validates changes; Discover runs manual Sync and Rank; Briefing handles source checking, Brief, Review, and Render. Researchers need not chain the internal commands themselves.
 
-## Pipeline
+## Hexagonal architecture
 
-`Build -> Sync -> Rank -> Brief -> Review -> Render`
+- `domain/` owns strict configuration and artifact contracts, independent of infrastructure.
+- `application/` owns use cases and ports; policy such as Gate decisions and briefing selection belongs here.
+- `adapters/` implements YAML, filesystem persistence, clocks, source APIs, renderers, and the CLI.
+- Top-level `frontierops.build`, `frontierops.sync`, and similar modules are composition roots that wire ports to adapters.
+- Dependencies point inward: adapters → application → domain. A renderer or API client must not define domain policy.
 
-研究人員入口收斂為 `Setup -> Config -> Discover -> Briefing`；前者建立真正的 `frontier.yaml` 與公開成果目錄，Config 使用自然語言與必要追問，Discover 內含手動 Sync＋Rank，Briefing 內含 Brief＋Review＋Render。六個原階段仍是可重現、可除錯的內部契約，不要求研究人員逐一操作。
+## Internal stages and files
 
-- **Build：** 驗證設定並建立可重現的 Run。
-- **Sync：** 與上一次成功狀態比較資料來源；系統不內建排程器。
-- **Rank：** 套用 YAML 定義的 eligibility gates 與可拆解分數。
-- **Brief：** 解釋問題、方法、新穎性、實驗、限制與研究意義。
-- **Review：** 阻擋無證據 claim、失效來源、重複內容與超時 briefing。
-- **Render：** 只從已核准 spec 產生各種格式；影片先產生可審核 preview，核准後才編碼 MP4。
+| Stage | Input | Output and decision |
+|---|---|---|
+| Build | Active YAML | Validated configuration snapshot, environment report, Run manifest, state initialization. |
+| Sync | Resolved config, source state | Provider records, new/updated signals, topical observations, cursor snapshot. Runs only when invoked. |
+| Rank | This Run's signals and policy | Candidates, Gate traces, scores, Evidence, topic delta, Discovery HTML. |
+| Brief | Candidates and optional saved selection | Development links, editable paper explanations, timed draft and narration. |
+| Review | Edited draft and this Run's Evidence | Claim checks, issue report, approved spec only if blocking issues are absent. |
+| Render | Approved spec and Evidence | Per-paper HTML and OpenSlide projects; optional Run-level narrated preview. |
 
-## 核心 Artifacts
+`frontier sync --config PATH` creates Build as part of the same Run. A standalone `frontier build` is a diagnostic command and creates a different Run; it is not a prerequisite to Sync. Later stages use the exact path returned by Sync.
 
-| Artifact | 職責 |
+## Artifact contracts
+
+| Artifact | Meaning |
 |---|---|
-| `ResearchSignal` | 新增或改變的論文、決策、release、benchmark 或本地文件 |
-| `Evidence` | 具有穩定 locator、可回到來源查證的證據片段 |
-| `BriefingCandidate` | 已正規化、評分且保留 eligibility trace 的候選研究 |
-| `ResearchDevelopment` | 跨來源、跨 Run 聚合的一項研究發展 |
-| `BriefingSpec` | 與 renderer 無關、含時間與 Evidence link 的 briefing 內容 |
-| `RunManifest` | 一次 Run 的輸入、輸出、版本、stage、警告與失敗狀態 |
+| `ResearchSignal` | A normalized observation from a provider, with stable external ID, source, payload, and new/updated/unchanged status. Current live adapters focus on papers and submissions; release and benchmark feeds remain future extensions. |
+| `Evidence` | Source content with a locator: abstract JSON pointer, PDF page/bounding box, text line range, or alphaXiv page number. Its tier distinguishes author-reported abstract text from primary full text. |
+| `BriefingCandidate` | A signal transformed into a ranked paper candidate with features, Gate decisions, source IDs, metadata, and Evidence IDs. |
+| `ResearchDevelopment` | A persistent cross-run grouping of related candidates with first/last seen and new/updated/unchanged status. |
+| `BriefingSpec` | Renderer-neutral, timed sections, claims, Evidence references, metadata, narration, and target formats. The reviewed version is the only Render input. |
+| `RunManifest` | Run ID, schema version, config hash, stage-result paths, output paths, status, and warnings. |
 
-## 保存與政策
+JSON/JSONL files are inspectable artifacts. SQLite is a rebuildable index, not the authority for briefing content. Each Run has its own directory under `.frontier/runs/`; stage files within that Run are written as the pipeline proceeds. `.frontier/state/` stores the latest successful provider state, and `.frontier/cache/raw/` currently stores normalized source-record snapshots keyed by hash. Public outputs are separate under `project.output_dir`, defaulting to `frontier_output/`. A later Run does not overwrite an earlier one.
 
-- `.frontier/runs/` 採 append-only；`.frontier/state/` 保存 cursors；`.frontier/cache/raw/` 保存 immutable source snapshots。
-- `project.output_dir` 預設 `frontier_output/`，保存可供研究人員直接開啟的成果；內部 Run 與公開成果分離。Setup 不覆蓋既有 `frontier.yaml`，新設定的來源預設關閉，產出先選 HTML／slides；影片須確認 TTS 與授權後啟用。
-- 本地 PDF 可有同名 `.pdf.json` sidecar，保存經原文／來源頁核對的標題、作者、機構、日期、發表狀態、來源 URL 與 arXiv ID。Sidecar 變更視為來源版本更新。缺欄位保留未知，不得以預印本推定 conference 接受。Config Skill 的候選 YAML 保存在 `.frontier/config-drafts/`，只供 validate／diff；`frontier.yaml` 是唯一生效設定。
-- `BriefingSection.paper_metadata` 沿用候選論文的書目欄位；`source_excerpts` 可保存原文精確引句與 Evidence ID。Review 對引句逐字核對，不得把任意生成的句子標成螢光標記。HTML 必須提供可查核的書目、重點摘要、原圖或引句、逐項論證；OpenSlide 將問題、主要貢獻、方法、實驗與限制分頁表達，不用長段草稿直接當投影片。
-- JSON／JSONL artifacts 是可直接檢查的 source of truth；SQLite 只是可重建的查詢索引。
-- 失敗的 Sync Run 仍保留供除錯，但不得推進 last-successful cursor。
-- `frontier.yaml` 擁有 domain policy；未知欄位必須失敗，secret 只保存環境變數名稱。
-- Gate 對候選項做 pass、exclude、warn 或 exempt；score 只負責排列合格候選。
+## Configuration lifecycle
 
-## 設定生命週期
+`frontier.yaml` is the active policy file. Unknown fields fail validation; secret values are not part of the schema. The Config Skill follows `schema/inspect → draft → resolve ambiguity → validate → diff → apply`. Candidate YAML under `.frontier/config-drafts/` is a proposal only. A preview-only or unresolved request must stop before Apply. The CLI's `config apply` validates and atomically writes the active file; the agent is responsible for showing the diff before invoking it.
 
-- `schema` 與 `inspect` 公開 machine-readable 契約與 materialized defaults。
-- `validate` 必須在外部操作前拒絕未知欄位。
-- `diff` 以穩定欄位路徑比較設定，而不是比較 YAML 排版。
-- `draft` 產生暫存 candidate；`apply` 驗證成功後才 atomic replace。
-- Coding-agent Skills 必須透過這些命令修改設定，不可直接盲改 active config。
-- Scholar／venue resolver 回傳 stable ID 與消歧資訊；多個候選必須由使用者明確確認。
-- Offline fixtures 定義 adapter contract；live provider 可替換 adapter 而不改 use case。
-- `plugins/frontierops/skills/` 提供 portable Setup／Config／Discover／Briefing Skill；自然語言設定、使用者觸發的 Sync、Review 發布邊界及輸出查核由既有 Coding Agent 操作，不內嵌 LLM client 或 agent framework。OpenSlide source/build 與影片 preview/MP4 核准仍須明確區分；不得繞過主系統 artifacts。
-- 安全順序是 `schema/inspect -> draft -> resolve -> validate -> diff -> apply`；preview-only 或未消歧請求必須停在 apply 前。
+Setup does not replace an existing YAML file. Newly created workspaces start with live sources disabled and HTML/slides selected. The committed `frontier.yaml.example` is an offline fixture, not an active workspace configuration. Stable author and venue identifiers matter more than display names; an ambiguous resolver result requires researcher confirmation. The current resolver uses offline fixtures and must not be represented as a live identity verification service.
 
-## Render 與影片核准邊界
+All domain thresholds, source selections, and output preferences are represented in YAML. Some accepted fields are not yet wired into behavior: source `overlap_days`, scholar `backfill_days` and `always_include_new_publications`, Sync `default_lookback_days` and `on_provider_error: partial`, and video `fps`/`quality`. `sync.preserve_raw_responses` does not currently control caching. `review.required: false` does not bypass Review. The [configuration reference](configuration.html) documents these limits field by field; the harness must not silently claim they work.
 
-- Render 只讀取 `04-review/briefing.approved.json`，所有格式保存相同 claim fingerprints。
-- Render 會把可閱讀的 HTML、OpenSlide 專案與可用的 HyperFrames 預覽發布到 `project.output_dir/briefings/<run-id>/`，另附 `index.html` 與 `manifest.json`；公開目錄不含 Sync raw cache。每篇選中論文另有 `papers/paper-N/html/` 與 `papers/paper-N/slides/` 的獨立成果，manifest 逐篇列出路徑；根目錄綜合版暫供舊流程相容。重跑同一 Run 會建立帶序號的新目錄，不覆蓋既有成果。影片預覽目前仍為 Run 層級，尚未逐篇拆分；最終 MP4 與 preview 明確區分。
-- HTML adapter 是逐篇論文的互動閱讀介面：研究問題分頁、Evidence 展開、原文頁碼連結、可放大的論文圖。使用者應能先理解論文，再查核原文；不能只列靜態摘要卡。
-- Render 從已引用的本地 PDF 擷取附有 caption 與頁碼的原圖，記入 `assets-manifest.json.visuals`。向上裁切範圍須涵蓋 caption 前的整張向量／影像圖，而非固定高度的圖尾；找不到可驗證圖片時明示缺少素材，不生成貌似原圖的裝飾圖；圖像抽取失敗不得影響文字簡報。
-- Slides adapter 從同一份 `BriefingSpec` 與原圖素材產生 OpenSlide v2 的 React `Page[]` 專案，位於 `05-render/open-slide/`。頁面以論文問題、方法原圖、機制、結果與限制組織；密集的原圖與機制文字分頁，原圖標明 Figure 與頁碼。逐頁 notes 不重複整段旁白。輸出 `index.tsx` 是可編輯 deck source；執行專案內 `npm run build` 才得到 `dist/` 靜態展示站，PDF 由 OpenSlide 工具列匯出。
-- Video preview adapter 透過外部 HeyGen TTS tool 取得 WAV 與原生 word timestamps；FrontierOps 不重作 TTS client，也不保存憑證。
-- HyperFrames project 使用三段論文導向的 scene sub-compositions（問題／方法原圖／結果）、有頁碼的原圖、受控的進度與內容動態、獨立音軌與 timed captions；禁止重複卡片格、標題上方小標、全大寫裝飾字與無關的 pill。找不到原圖時需明示，不能生成貌似論文證據的假圖。同一 Run 重跑會重用既有旁白。
-- `video_preview` 只代表可審核 composition。未經 preview 核准前，`missing_targets` 必須保留 `video`，Run 不得宣告完整成功。
-- `rendering.video` 的 provider、voice、language、畫布、fps 與 quality 都由 YAML 控制，不得 hardcode 成隱藏政策。
+## Ingestion and identity
 
-## Runtime 與驗收
+- arXiv live search uses its Atom API with configured paper IDs, queries, or categories. It retains base arXiv ID and version.
+- Semantic Scholar live mode fetches papers for verified author IDs and paginates author-paper results; the key is optional, subject to upstream limits. It is not a general topic search adapter.
+- OpenReview uses the API 2 Python client, preserving forum, invitation, reply, and detected decision context. Credentials come from environment variables. Decision filtering is not guaranteed accepted-only when a note lacks a detected decision.
+- OpenAlex searches title, abstract, and keywords for each configured topic and date window. It reconstructs the inverted-index abstract and maps `cited_by_count` to citation policy. It marks results truncated when `max_results` cuts off further pages. Basic search can run without a key.
+- alphaXiv MCP supplies a small ranked topical supplement and PDF page query. `discover_papers` is top-k, not a complete sync baseline. The headless client needs an API key. The optional `frontier evidence` call converts `answer_pdf_queries` XML pages into `primary_fulltext` Evidence and saves the raw XML/query history without changing the ranking or selection.
+- Local library roots are restricted to the project by default. PDFs are parsed with PyMuPDF and retain page/bounding-box locators; `.md` and `.txt` files retain line locators. A same-name `.pdf.json` sidecar can hold verified bibliographic metadata. Unknown metadata stays unknown; arXiv posting does not imply conference acceptance.
 
-- Python 3.12 與 `uv >= 0.12.20, < 0.14` 是必要條件；CI 同時驗證 uv 0.12 與 0.13，`uv.lock` 與 `uv sync --locked` 保證可重現安裝。
-- Build 需建立標準 stage output、`RunManifest`、state files 與可重建 SQLite index，且不得覆蓋舊 Run。
-- Unit／integration tests 必須透過 `uv run --locked` 執行；未知設定欄位需明確失敗。
-- Sync 只能由使用者觸發，保存 raw snapshots，並以 stable source ID 與內容雜湊做 delta comparison。
-- Live arXiv 保存 base ID 與 version；Semantic Scholar 使用 stable author ID 與分頁 author-paper response。
-- OpenAlex 的 live topic search 由 `profile.topics[].search` 定義穩定主題 ID、查詢字串與發表日期區間；`sources.openalex` 控制分頁、上限與可選 API key 環境變數。來源回應的 `cited_by_count` 映射到既有 citation gate，倒排摘要重建為 abstract；達到 `max_results` 但仍有下一頁時須標記截斷，不能宣稱已找到全量論文。
-- alphaXiv MCP 用於補充搜尋及閱讀候選論文，不以其每次少量的 `discover_papers` 結果作為全量增量基準。兩種來源的主題與日期條件由同一份設定控制，API key／OAuth token 不寫入 Run artifact。Briefing Skill 可在選定候選後呼叫內部 `frontier evidence --run … --candidate … --query …`：以該候選已驗證的 arXiv ID／PDF URL 呼叫 `answer_pdf_queries`，把 `<paper><page num="…">` 轉成 page locator 的 `primary_fulltext` Evidence，保留原始回應及查詢於該 Run，並將 Evidence ID 掛回候選。此步不改寫 Rank 或選取；Agent 仍須閱讀 PDF 核對語意，Review 仍只核准已引用的證據。沒有金鑰、PDF 位址或服務失敗時應明確回報，不得把摘要假裝成全文證據。
-- Local library root 預設限制在 project 內；PDF Evidence 保存 page／bbox，文字 Evidence 保存 line locator。
-- OpenReview 使用官方 API v2 client，保存 forum、invitation、reply 與 decision provenance；認證只存在環境。
-- Rank 輸出 Evidence、合格／排除候選與可重現 ranking report；factual explanation 必須引用 abstract 或 page-level Evidence。
-- Discover 入口把 Sync＋Rank 結果呈現在 `project.output_dir/discoveries/<run-id>.html`。對有穩定 `topic.id` 的檢索，Sync 另存本次全部回傳的 `topic-observations.jsonl`；Rank 每次對本次回傳候選重新計分，並以先前同主題 Run 為基準輸出 `topic-delta.json`：新納入範圍、上次後發表、本次才查得、Gate 變更、未回傳。日期／查詢改變時，舊論文未回傳不等於撤稿，新納入範圍不等於新發表；來源截斷或 alphaXiv top-k 必須標示比較不完整。無主題的來源仍只排名新增／更新訊號。頁面顯示 Gate、分數、前後名次及時間序列；不得把 heuristic 抽句或排序分數當成已查證的論文品質。
-- `frontier discovery serve --run PATH` 僅綁定 loopback，提供暫時互動頁。研究者在頁面勾選後，伺服器驗證 Run ID 與合格 candidate ID，寫入 `02-rank/briefing-selection.json`；Brief 只採用此檔指定的候選。純靜態 HTML 只能下載同格式 JSON，無法直接改寫自己的檔案。選取檔是可追溯的 Run artifact，不需要資料庫；沒有選取檔時維持既有預設。
-- 使用者操作面是可安裝的 Agent plugin（Claude、Codex、Copilot）及 Setup／Config／Discover／Briefing 四個 Skill。六個 CLI 階段仍保留可測試的 Artifacts，但不要求研究人員逐段下指令；plugin 只提供工作流程，Python Harness 由 Setup 透過 uv 安裝。
-- Brief 將跨來源候選聚合成 persistent developments，抑制 unchanged items，並產生可調時間的 renderer-neutral spec。
-- Review 是發布邊界；schema、duration、duplicate、Evidence reference 與 numeric-support 錯誤都必須阻擋核准。
-- Video preview 驗收至少包含 HyperFrames lint、browser runtime、layout、caption safe zone、contrast 與人工 snapshot 檢查。
+Secrets are passed only through the harness process environment. YAML records environment-variable names, not passwords, tokens, or keys. The [credentials guide](credentials.html) gives the current per-provider setup and the distinction between OpenReview account login and alphaXiv's API key.
+
+## Manual discovery and comparison
+
+Sync compares stable provider IDs and normalized content fingerprints with saved state. It writes changed signals, and for topical queries also writes every observation returned in the current scope—even unchanged papers—so Rank can score the current result set again. There is no timer. A provider failure currently stops Sync; partial recovery is not implemented despite the reserved config value.
+
+The Discovery page is published at `project.output_dir/discoveries/<run-id>.html`. For each stable `profile.topics[].id`, `02-rank/topic-delta.json` compares with the latest earlier Run of that topic. It distinguishes a baseline, papers newly in a changed scope, papers published since the prior Run, papers observed only now, Gate/eligibility changes, rank/score changes, unchanged papers, and papers not returned this time. Changing the year window must not label old papers as newly published; a missing result is not evidence of withdrawal. Truncated OpenAlex pages or alphaXiv's top-k results must be flagged as incomplete coverage. Scores and extracted sentences are heuristics, not validated quality judgments.
+
+`frontier discovery serve --run PATH` binds only to loopback. The local page validates the Run and eligible candidate IDs before writing `02-rank/briefing-selection.json`. A static HTML page cannot modify itself; it can only download a selection file for the agent to apply. The selection file is the auditable Run artifact, not a database table. Brief reads this file automatically when it exists.
+
+## Briefing, evidence, and publication
+
+Brief groups related candidates, records their development history, and normally suppresses unchanged developments. It honors `brief.target_duration_seconds`, `maximum_developments`, and per-development limits. Its deterministic explanation is a scaffold: an agent must check the actual paper's problem, mechanism, experiments, limitations, author/venue metadata, and any selected figures. Claims must cite this Run's Evidence. A paper's exact source excerpt is checked against its cited Evidence; invented quotations, figures, benchmark numbers, or venues are unacceptable.
+
+Review is the publication boundary. It checks schema, duration, duplicate developments, Evidence IDs, missing citations, unsupported numeric strings, and exact excerpts. These checks do not establish semantic truth: the agent or researcher still has to determine whether a page actually supports the claim. Render reads only `04-review/briefing.approved.json`; a failed draft must not be published as approved output.
+
+Render publishes an interactive per-paper HTML explanation and editable OpenSlide project under `project.output_dir/briefings/<run-id>/papers/paper-N/`, with a public `manifest.json` mapping each paper to its files. The aggregate root view remains for compatibility. A repeated Render of one Run creates a numbered public directory rather than replacing the previous publication. HTML presents navigable problem/method/result/limitation content, expandable Evidence, source links, and figures where available. The slide project is OpenSlide v2 React `Page[]` source; `npm run build` produces its static presentation. No automatic PPTX export is claimed.
+
+Source figures from cited local PDFs are preferred over decorative graphics. Extracted visuals are recorded in `assets-manifest.json` with figure/page provenance. Figure extraction may fail without blocking text output; absence of a usable figure must be stated, not disguised with a fabricated paper figure. Slides should separate a dense figure from its explanation and keep notes specific to each page.
+
+The optional video path uses an external HeyGen TTS adapter and HyperFrames preview composition. FrontierOps does not implement the TTS client or store its credentials. The preview is Run-level and inspectable; it is not a final MP4. Until the preview is explicitly reviewed and a separate export is authorized, `video` remains a missing target and the Run is not reported as fully rendered. Do not incur TTS or export costs without researcher approval.
+
+## Runtime and verification
+
+Python 3.12 and `uv >=0.12.20,<0.14` are supported. CI tests uv 0.12 and 0.13 with the checked-in lockfile. Unit tests cover deterministic policy; integration tests cover source adapters, stages, storage, CLI, and the documentation site. Use `uv run --locked python -m unittest discover -s tests` from the repository root. `uv run --locked frontier` also requires running from that checkout; an installed uv tool can be called as `frontier` from a research workspace.
+
+Acceptance of a new source or renderer requires a verified adapter contract, inspectable stage artifact, explicit failure state, and a real source link. Full end-to-end quality of a scientific explanation cannot be inferred from a passing structural Review or renderer build alone.

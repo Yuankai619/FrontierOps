@@ -67,6 +67,11 @@ class DocsSiteTests(unittest.TestCase):
                 self.assertIn('lang="en"', html)
                 self.assertIsNone(re.search(r"[\u4e00-\u9fff]", html))
 
+    def test_linked_markdown_documentation_is_english(self) -> None:
+        for source in (DOCS / "system-spec.md", DOCS / "user-manual.md", DOCS.parent / "README.md"):
+            with self.subTest(page=source.name):
+                self.assertIsNone(re.search(r"[\u4e00-\u9fff]", source.read_text(encoding="utf-8")))
+
     def test_config_reference_covers_every_nested_schema_field(self) -> None:
         html = (DOCS / "configuration.html").read_text(encoding="utf-8")
         models = (
