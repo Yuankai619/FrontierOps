@@ -1,0 +1,31 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>輸出與紀錄 — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
+<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
+<main class="container doc-page"><h1>輸出與紀錄</h1><p class="lead">設定、原始資料、每次執行與公開成果分開保存。不要從資料夾名稱猜最新輸出，應讀 Run manifest。</p>
+<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html">Quick Start</a><a href="steps.html">四個使用步驟</a><a href="example.html">AutoSci 範例</a><a href="configuration.html">frontier.yaml</a><a href="commands.html">指令參考</a><a href="outputs.html" aria-current="page">輸出與紀錄</a></nav><article class="docs-main">
+<section><h2>工作區結構</h2><pre><code>research-workspace/
+├── frontier.yaml                     # 唯一生效設定
+├── data/library/                    # 本地 PDF 與同名 .pdf.json
+├── .frontier/
+│   ├── config-drafts/              # Config 候選稿
+│   ├── state/                      # 上次成功 Sync 的 cursor
+│   ├── cache/raw/                  # 原始來源快照
+│   └── runs/&lt;run-id&gt;/
+│       ├── 01-sync/               # 新增、更新、重複數量
+│       ├── 02-rank/               # 候選、Evidence、選取檔
+│       ├── 03-brief/              # 可修訂草稿
+│       ├── 04-review/             # 審核結果
+│       ├── 05-render/             # 內部渲染結果
+│       └── run-manifest.json
+└── frontier_output/
+    ├── discoveries/&lt;run-id&gt;.html
+    └── briefings/&lt;run-id&gt;/
+        ├── index.html             # 成果目錄
+        ├── manifest.json          # 逐篇輸出路徑
+        └── papers/paper-1/
+            ├── html/index.html
+            └── slides/            # 可編輯 OpenSlide 專案</code></pre></section>
+<section><h2>Discover 之後</h2><p>Discover 頁面顯示本次新／更新、前幾次 Run 的數量與舊論文清單。舊論文不套新設定重新計分。選取頁在本機服務模式下寫入 <code>02-rank/briefing-selection.json</code>，包含 Run ID 與合格 candidate ID；瀏覽器不能把修改直接存回 HTML 檔。沒有資料庫。</p></section>
+<section><h2>Briefing 之後</h2><p><code>05-render/render-result.json.public_output_dir</code> 指向這次實際發布的資料夾。每篇 HTML 與 slide 專案在 <code>papers/paper-N/</code>，總覽版保留作舊流程相容。同一 Run 重做 Render 會產生帶序號的新公開資料夾，不覆蓋舊成果。</p><p>進入某篇的 <code>slides/</code> 執行：</p><pre><code>npm install
+npm run sync:skills
+npm run build</code></pre><p>建置後在 OpenSlide 的 <code>/s/frontier-briefing</code> 路由展示；系統目前不自動匯出 PPTX 或 PDF。影片 preview 仍以整個 Run 為單位，未拆成逐篇成品。</p></section>
+</article></div></main></body></html>

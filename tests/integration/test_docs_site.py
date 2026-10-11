@@ -28,9 +28,8 @@ def parse(page: Path) -> PageLinks:
 
 class DocsSiteTests(unittest.TestCase):
     def test_local_links_and_anchors_resolve(self) -> None:
-        for filename in ("index.html", "guide.html"):
-            with self.subTest(page=filename):
-                source = DOCS / filename
+        for source in DOCS.glob("*.html"):
+            with self.subTest(page=source.name):
                 for href in parse(source).links:
                     if href.startswith(("https://", "http://", "mailto:")):
                         continue
@@ -40,6 +39,13 @@ class DocsSiteTests(unittest.TestCase):
                     self.assertTrue(destination.is_file(), href)
                     if fragment and destination.suffix == ".html":
                         self.assertIn(fragment, parse(destination).ids, href)
+
+    def test_each_guide_topic_is_a_separate_page(self) -> None:
+        for filename in ("quick-start.html", "steps.html", "example.html",
+                         "configuration.html", "commands.html", "outputs.html"):
+            with self.subTest(page=filename):
+                self.assertTrue((DOCS / filename).is_file())
+                self.assertIn('class="docs-nav"', (DOCS / filename).read_text())
 
 
 if __name__ == "__main__":

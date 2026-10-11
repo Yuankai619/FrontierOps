@@ -1,0 +1,48 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>frontier.yaml — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
+<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
+<main class="container doc-page"><h1><code>frontier.yaml</code></h1><p class="lead">這是唯一生效的設定。Agent 可以替你寫；需要手動檢查時，用下列欄位對照。未知欄位會驗證失敗，未指定值保留 schema 預設。</p>
+<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html">Quick Start</a><a href="steps.html">四個使用步驟</a><a href="example.html">AutoSci 範例</a><a href="configuration.html" aria-current="page">frontier.yaml</a><a href="commands.html">指令參考</a><a href="outputs.html">輸出與紀錄</a></nav><article class="docs-main">
+<section><h2>單篇 PDF 的設定</h2><pre><code>schema_version: "0.1"
+project:
+  id: autosci
+  name: AutoSci
+  language: en
+sources:
+  local_library:
+    enabled: true
+    roots: [data/library]
+profile:
+  topics:
+    - id: research-agents
+      description: Research agents and persistent memory
+      weight: 1.0
+ranking:
+  gates: []
+  features:
+    citation: {enabled: false, weight: 0.0}
+brief:
+  target_duration_seconds: 300
+  maximum_seconds_per_development: 300
+  outputs: [html, slides]
+rendering:
+  video: {enabled: false}</code></pre><p><code>roots</code> 以 YAML 所在資料夾為基準。本地 PDF 沒有可靠引用數時，關閉 citation 特徵比硬設門檻合理。完整預設與型別請執行 <code>frontier schema config --format json</code>。</p></section>
+<section><h2>各區塊做什麼</h2><table><thead><tr><th>區塊</th><th>設定與後果</th></tr></thead><tbody>
+<tr><td><code>project</code></td><td>名稱、輸出語言、內部 <code>workspace_dir</code>（預設 <code>.frontier</code>）、公開 <code>output_dir</code>（預設 <code>frontier_output</code>）。語言欄位不會自動翻譯原文。</td></tr>
+<tr><td><code>sources</code></td><td>啟用本地庫、arXiv、Semantic Scholar 或 OpenReview。只填 URL 仍需選對來源；Config Skill 可將指定 arXiv PDF 存入本地庫供全文與圖像分析。</td></tr>
+<tr><td><code>tracking</code></td><td><code>scholars</code> 與 <code>venues</code> 使用來源穩定 ID；同名學者須確認。Google Scholar live adapter 尚未實作。</td></tr>
+<tr><td><code>profile</code></td><td><code>topics[].description/weight</code> 與 <code>keywords.include/exclude</code> 表示研究興趣；關鍵字只輔助初篩。</td></tr>
+<tr><td><code>ranking</code></td><td><code>gates</code> 決定可否入選；<code>features.*.weight</code> 對合格論文排序。分數不是品質、可信度或接受機率。</td></tr>
+<tr><td><code>sync</code></td><td><code>trigger_mode: manual</code>，以最近成功同步的 cursor 比較。來源失敗可選 <code>fail</code> 或 <code>partial</code>。</td></tr>
+<tr><td><code>brief</code></td><td><code>target_duration_seconds</code> 預設 300，可自訂；<code>outputs</code> 選 HTML、slides、video；<code>maximum_developments</code> 限一次選幾篇。</td></tr>
+<tr><td><code>review</code></td><td>控制缺證據、無來源數字、重複等是否阻擋；不能語意判斷主張是否真的受原文支持。</td></tr>
+<tr><td><code>rendering.video</code></td><td>預設關閉；開啟前需備旁白服務並同意可能的費用。這次 AutoSci 不測影片。</td></tr>
+</tbody></table></section>
+<section><h2>Gate 和權重</h2><p>Gate 先回答「能不能進候選清單？」權重再決定入選後的排列。新預印本往往沒有 citation count，不應套固定最低引用數；可以用 <code>on_fail: warn</code> 或新論文豁免。</p><pre><code>ranking:
+  gates:
+    - id: citations
+      type: citation
+      minimum_count: 3
+      exempt_if_age_days_lte: 90
+      on_fail: warn</code></pre></section>
+<section><h2>候選設定檔</h2><p><code>.frontier/config-drafts/*.candidate.yaml</code> 是 Config Skill 做 validate 和 diff 用的提案；它不會被 Sync 讀取。確認後 Agent 才把變更套用到 <code>frontier.yaml</code>。保留候選檔有助於追溯修改，但日常只需看 active YAML。</p></section>
+</article></div></main></body></html>

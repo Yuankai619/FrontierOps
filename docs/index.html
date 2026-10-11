@@ -14,8 +14,8 @@
       <nav aria-label="主選單">
         <a href="#approach">設計概念</a>
         <a href="guide.html">使用文件</a>
-        <a href="guide.html#example">實跑範例</a>
-        <a href="https://github.com/Yuankai619/FrontierOps">GitHub ↗</a>
+        <a href="example.html">實跑範例</a>
+        <a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a>
       </nav>
     </div>
   </header>
@@ -23,20 +23,20 @@
   <main>
     <section class="hero">
       <div class="container">
-        <h1>讀懂新論文，<br>保留每一步的依據。</h1>
-        <p class="hero-copy">FrontierOps 是供 Claude Code、Codex 等既有 Coding Agent 使用的研究簡報 Harness。研究者決定要追蹤什麼、何時檢查更新；Agent 用它整理原文證據，做出可回查的論文解說。</p>
+        <h1>FrontierOps</h1>
+        <p class="hero-copy">用既有 Coding Agent 追蹤新論文，檢查原文證據，整理成可回查的研究簡報。同步由研究者啟動，設定與每次執行都留在本地。</p>
         <div class="actions">
-          <a class="button-primary" href="guide.html#quick-start">開始使用 <span aria-hidden="true">↗</span></a>
-          <a class="plain-link" href="guide.html#how-it-works">看四個使用步驟 <span aria-hidden="true">→</span></a>
+          <a class="button-primary" href="quick-start.html">Quick Start <span aria-hidden="true">↗</span></a>
+          <a class="plain-link" href="steps.html">四個使用步驟 <span aria-hidden="true">→</span></a>
         </div>
       </div>
     </section>
 
     <section class="section" id="approach">
       <div class="container split-section">
-        <h2>先回答論文在做什麼。</h2>
+        <h2>論文清單之外</h2>
         <div class="section-copy">
-          <p>論文清單只告訴你「有什麼」。FrontierOps 的目標是讓研究者迅速看懂「為什麼做、怎麼做、證據支持到哪裡、還有哪些限制」。每個關鍵主張都能回到原文頁面。</p>
+          <p>每篇解說先交代研究問題，再讀方法、實驗與限制。主張附原文頁碼；來源不夠時明說，不用排序分數替論文下評語。</p>
           <p>它不在背景自行計時搜尋。只有你要求 Discover 時才同步；新結果會與上次成功同步比對，過往紀錄仍保留。</p>
         </div>
       </div>
@@ -44,7 +44,7 @@
 
     <section class="section section-tinted">
       <div class="container">
-        <h2>研究者看到四個動作。</h2>
+        <h2>四個使用動作</h2>
         <ol class="action-list">
           <li><span class="step-number">01</span><div><h3>Setup</h3><p>建立工作區，檢查環境，產生可編輯的設定檔。</p></div></li>
           <li><span class="step-number">02</span><div><h3>Config</h3><p>用自然語言描述研究範圍；Agent 驗證並套用規則。</p></div></li>
@@ -57,7 +57,7 @@
 
     <section class="section">
       <div class="container split-section">
-        <h2>同一份核准內容，<br>不同的閱讀方式。</h2>
+        <h2>閱讀與報告</h2>
         <div class="section-copy">
           <div class="output-row"><h3>互動 HTML</h3><p>按研究問題切換段落，展開證據，查看論文圖與 PDF 原頁。</p></div>
           <div class="output-row"><h3>OpenSlide</h3><p>保留可編輯的投影片原始專案；建置後可在瀏覽器展示。</p></div>
@@ -68,9 +68,9 @@
 
     <section class="closing">
       <div class="container">
-        <h2>從一篇論文開始。</h2>
-        <p>閱讀四步 Quick Start，或查看 AutoSci 論文的實跑紀錄與已知限制。</p>
-        <div class="actions"><a class="button-primary" href="guide.html#quick-start">閱讀使用文件 <span aria-hidden="true">↗</span></a><a class="plain-link" href="guide.html#example">AutoSci 範例 <span aria-hidden="true">→</span></a></div>
+        <h2>先跑 AutoSci 範例</h2>
+        <p>四句簡短指令，從一篇 arXiv 論文開始。範例也記下目前不能自動完成的查核工作。</p>
+        <div class="actions"><a class="button-primary" href="quick-start.html">閱讀使用文件 <span aria-hidden="true">↗</span></a><a class="plain-link" href="example.html">AutoSci 範例 <span aria-hidden="true">→</span></a></div>
       </div>
     </section>
   </main>

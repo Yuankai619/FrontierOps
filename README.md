@@ -4,7 +4,7 @@ FrontierOps 是給 Claude Code、Codex、GitHub Copilot CLI 等 Coding Agent 使
 
 首要成果是幫人理解論文的研究問題、方法、實驗支持與限制。可產生可互動 HTML、OpenSlide 原始投影片專案，以及在啟用影音相依與授權後的 HyperFrames 旁白預覽；預覽不等於已匯出的 MP4。
 
-請從[專案首頁](docs/index.html)、[網頁版使用文件](docs/guide.html)、[AutoSci 四個 Skill 實測範例](docs/examples/autosci.md)或[系統規格](docs/system-spec.md)開始。
+請從[專案首頁](docs/index.html)、[Quick Start](docs/quick-start.html)、[AutoSci 範例](docs/example.html)或[系統規格](docs/system-spec.md)開始。
 
 ## Quick Start：先安裝 Agent Skill plugin
 
@@ -53,4 +53,4 @@ uv run --locked frontier render --run <run-path>
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-驗收時開啟 `frontier_output/discoveries/<run-id>.html` 與 `frontier_output/briefings/<run-id>/index.html`；在公開成果的 `slides/` 中用 `npm install`、`npm run sync:skills`、`npm run build` 驗收 OpenSlide。預設 fixture 未設 HeyGen 授權，不應期待最終 MP4。完整命令與 YAML 欄位見[使用手冊](docs/user-manual.md)；變更規範見[AGENTS.md](AGENTS.md)。所有程式變動須以英文摘要式標題、繁體中文描述的 Pull Request 提交，每 PR 不超過 600 行 source／test／docs 變動。
+驗收時開啟 `frontier_output/discoveries/<run-id>.html` 與 `frontier_output/briefings/<run-id>/index.html`；在公開成果的 `slides/` 中用 `npm install`、`npm run sync:skills`、`npm run build` 驗收 OpenSlide。預設 fixture 未設 HeyGen 授權，不應期待最終 MP4。完整命令與 YAML 欄位見[指令參考](docs/commands.html)與[設定說明](docs/configuration.html)；變更規範見[AGENTS.md](AGENTS.md)。所有程式變動須以英文摘要式標題、繁體中文描述的 Pull Request 提交，每 PR 不超過 600 行 source／test／docs 變動。
