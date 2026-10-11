@@ -154,6 +154,29 @@ class ReviewConfig(StrictModel):
     auto_fix: Literal["none", "safe_only"] = "safe_only"
 
 
+class VideoPreviewConfig(StrictModel):
+    enabled: bool = False
+    provider: Literal["hyperframes"] = "hyperframes"
+    tts_provider: Literal["heygen"] = "heygen"
+    heygen_tts_script: Path | None = None
+    voice_id: str | None = None
+    language: str | None = None
+    width: int = Field(default=1920, gt=0)
+    height: int = Field(default=1080, gt=0)
+    fps: Literal[24, 30, 60] = 30
+    quality: Literal["draft", "looks", "delivery"] = "looks"
+
+    @model_validator(mode="after")
+    def enabled_preview_has_tts_adapter(self) -> "VideoPreviewConfig":
+        if self.enabled and self.heygen_tts_script is None:
+            raise ValueError("enabled video preview requires heygen_tts_script")
+        return self
+
+
+class RenderingConfig(StrictModel):
+    video: VideoPreviewConfig = Field(default_factory=VideoPreviewConfig)
+
+
 class ScholarTracker(StrictModel):
     id: str
     name: str
@@ -185,6 +208,7 @@ class FrontierConfig(StrictModel):
     sync: SyncConfig = Field(default_factory=SyncConfig)
     brief: BriefConfig = Field(default_factory=BriefConfig)
     review: ReviewConfig = Field(default_factory=ReviewConfig)
+    rendering: RenderingConfig = Field(default_factory=RenderingConfig)
 
     @model_validator(mode="after")
     def live_sources_have_targets(self) -> "FrontierConfig":

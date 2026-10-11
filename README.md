@@ -20,7 +20,7 @@ Build -> Sync -> Rank -> Brief -> Review -> Render
 - 由使用者執行 `frontier sync` 才比較上次成功狀態；不啟動背景排程。
 - 保存 immutable raw cache，並以 stable external ID 與內容雜湊避免重複訊號。
 
-Sync 支援凍結 fixture、arXiv／Semantic Scholar live provider、OpenReview 與本地 PDF／文字庫。Rank 會依 YAML Gate 與可解釋分數挑選新研究，Brief 產生可調時間的 `BriefingSpec`，Review 則在發布前阻擋缺少 Evidence、引用失效、數字無依據、重複研究與超時內容。Render 已能產生 portable HTML briefing 與 1920×1080 HTML slide deck；Video 仍在後續 stacked PR 實作。
+Sync 支援凍結 fixture、arXiv／Semantic Scholar live provider、OpenReview 與本地 PDF／文字庫。Rank 會依 YAML Gate 與可解釋分數挑選新研究，Brief 產生可調時間的 `BriefingSpec`，Review 則在發布前阻擋缺少 Evidence、引用失效、數字無依據、重複研究與超時內容。Render 已能產生 portable HTML briefing、1920×1080 HTML slide deck，以及含 HeyGen 旁白與 word-level 字幕的 HyperFrames preview project。最終 MP4 必須在人工預覽核准後才編碼，因此 preview 不會被誤記為已完成的 `video`。
 
 Slides 採用零外部依賴的 native HTML deck，可用方向鍵播放並以瀏覽器列印為 16:9 PDF。這是刻意的 Demo 穩定性決策：OpenSlide 目前的 headless CLI 只正式支援 static site build，PDF／PPTX 仍由瀏覽器 toolbar 匯出；renderer port 保留未來替換空間。參考 [OpenSlide export 文件](https://open-slide.dev/docs/core-feature/export)。
 
@@ -193,6 +193,23 @@ uv run --locked frontier render --run <approved-run-path>
 
 第二個指令成功後會印出本次 Run 的完整路徑。
 
+如需 narrated video preview，於 YAML 額外啟用外部工具 adapter；路徑可使用絕對路徑，或相對於 `frontier.yaml`：
+
+```yaml
+rendering:
+  video:
+    enabled: true
+    provider: hyperframes
+    tts_provider: heygen
+    heygen_tts_script: /path/to/media-use/audio/scripts/heygen-tts.mjs
+    width: 1920
+    height: 1080
+    fps: 30
+    quality: looks
+```
+
+`frontier render` 會在 `05-render/hyperframes/` 產生 `index.html`、scene sub-compositions、`narration.wav` 與 `narration.words.json`。同一 Run 重跑時會重用既有旁白，避免重複呼叫 HeyGen。憑證由 HeyGen CLI 的 credential store 或環境變數提供，不會寫進 config 或 Run artifacts。
+
 ## Config lifecycle
 
 以下介面供使用者及 [`frontier-config` Skill](skills/frontier-config/SKILL.md) 建立安全的設定變更：
@@ -237,7 +254,7 @@ uv sync --locked
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-預期結果：17 個測試全部顯示 `ok`，最後輸出 `OK`。
+預期結果：42 個測試全部顯示 `ok`，最後輸出 `OK`。
 
 ### 2. 執行真實 CLI 流程
 
