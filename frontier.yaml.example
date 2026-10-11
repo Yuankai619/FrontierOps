@@ -37,6 +37,12 @@ sources:
     page_size: 100
     max_results: 100
     request_delay_seconds: 3
+  local_library:
+    enabled: false
+    roots: [data/library]
+    recursive: true
+    allowed_extensions: [.pdf, .md, .txt]
+    allow_outside_project_root: false
 sync:
   trigger_mode: manual
   baseline: last_successful_sync

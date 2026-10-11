@@ -37,12 +37,18 @@ class SyncUseCase:
             for record in batch.records:
                 fetched += 1
                 raw = record.model_dump(mode="json")
-                fingerprint = _fingerprint(raw)
+                raw_fingerprint = _fingerprint(raw)
+                fingerprint = _fingerprint({
+                    "provider": record.provider,
+                    "external_id": record.external_id,
+                    "version": record.version,
+                    "payload": record.payload,
+                })
                 cache_ref = self.repository.cache_raw(workspace, name, raw)
                 snapshots.append({
                     "provider": name,
                     "external_id": record.external_id,
-                    "sha256": fingerprint,
+                    "sha256": raw_fingerprint,
                     "cache_ref": cache_ref,
                 })
                 prior = records.get(record.external_id)
