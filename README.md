@@ -39,4 +39,18 @@ copilot plugin install Yuankai619/FrontierOps:plugins/frontierops
 
 每次 Run 保存在 `.frontier/runs/<run-id>/`，同步狀態在 `.frontier/state/`，原始來源快照在 `.frontier/cache/raw/`；公開成果在 `frontier_output/`。舊 Run 不因下一次 Sync 被覆蓋。系統採 Hexagonal Architecture：`domain/` 定義契約，`application/` 編排用例與 ports，`adapters/` 對接來源、儲存及 renderers。
 
-開發者要逐段重現或執行測試，可用 `uv sync --locked`、`uv run --locked frontier --help`、`uv run --locked python -m unittest discover -s tests -v`。完整命令、YAML 欄位與驗收方式見[使用手冊](docs/user-manual.md)；變更規範見[AGENTS.md](AGENTS.md)。所有程式變動須以英文摘要式標題、繁體中文描述的 Pull Request 提交，每 PR 不超過 600 行 source／test／docs 變動。
+### 離線端到端驗收
+
+開發者要在 clone 的 repo 中跑**無 API key 的離線端到端驗收**，才使用 `frontier.yaml.example`。它引用版控內的 fixture，不會修改研究人員的 active `frontier.yaml`。`sync` 印出的絕對 Run 路徑須帶入後面每一步：
+
+```bash
+uv sync --locked
+uv run --locked frontier sync --config frontier.yaml.example
+uv run --locked frontier rank --run <run-path>
+uv run --locked frontier brief --run <run-path>
+uv run --locked frontier review --run <run-path>
+uv run --locked frontier render --run <run-path>
+uv run --locked python -m unittest discover -s tests -v
+```
+
+驗收時開啟 `frontier_output/discoveries/<run-id>.html` 與 `frontier_output/briefings/<run-id>/index.html`；在公開成果的 `slides/` 中用 `npm install`、`npm run sync:skills`、`npm run build` 驗收 OpenSlide。預設 fixture 未設 HeyGen 授權，不應期待最終 MP4。完整命令與 YAML 欄位見[使用手冊](docs/user-manual.md)；變更規範見[AGENTS.md](AGENTS.md)。所有程式變動須以英文摘要式標題、繁體中文描述的 Pull Request 提交，每 PR 不超過 600 行 source／test／docs 變動。
