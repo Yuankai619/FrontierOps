@@ -2,11 +2,12 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
+import shutil
 
 from frontierops.adapters.config import YamlConfigAdapter
 from frontierops.adapters.html import StaticHtmlRenderer
 from frontierops.adapters.render_assets import materialize_local_evidence
-from frontierops.adapters.slides import StaticSlideRenderer
+from frontierops.adapters.slides import OpenSlideRenderer
 from frontierops.adapters.storage import FileArtifactStore
 from frontierops.adapters.video import HeyGenNarrator, HyperFramesPreviewRenderer, infer_tts_language
 from frontierops.adapters.visuals import extract_paper_visuals
@@ -33,11 +34,20 @@ def run_render(run_dir: Path) -> Path:
     )
     started = datetime.now(timezone.utc)
     output = RenderService().execute(
-        briefing, evidence, [StaticHtmlRenderer(visuals), StaticSlideRenderer()]
+        briefing, evidence, [StaticHtmlRenderer(visuals), OpenSlideRenderer(visuals)]
     )
-    paths = {"html": "05-render/briefing.html", "slides": "05-render/slides.html"}
+    paths = {"html": "05-render/briefing.html",
+             "slides": "05-render/open-slide/slides/frontier-briefing/index.tsx"}
     for target, document in output.documents.items():
         store.write_text(Path(paths[target]), document)
+    if "slides" in output.documents:
+        for relative, document in OpenSlideRenderer.project_files().items():
+            store.write_text(Path("05-render/open-slide") / relative, document)
+        for visual in visuals.values():
+            source = run_dir / "05-render" / str(visual["uri"])
+            target = run_dir / "05-render/open-slide/assets" / source.name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
     preview_path = _prepare_video_preview(config, briefing, run_dir, resolution)
     status = "partial" if output.missing_targets else "success"
     render_result = {
