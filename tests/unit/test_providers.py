@@ -3,7 +3,7 @@ import unittest
 
 from frontierops.adapters.providers import ArxivProvider, SemanticScholarProvider
 from frontierops.adapters.openalex import OpenAlexProvider
-from frontierops.adapters.alphaxiv import AlphaXivProvider
+from frontierops.adapters.alphaxiv import AlphaXivProvider, parse_page_xml
 from frontierops.domain.models import ProviderSourceConfig, TopicConfig
 
 
@@ -34,6 +34,29 @@ class FakeHttp:
 
 
 class LiveProviderContractTests(unittest.TestCase):
+    def test_alphaxiv_wrapped_results_and_page_xml(self) -> None:
+        topic = TopicConfig(id="agents", description="agents", search={
+            "providers": ["alphaxiv"], "query": "agent harness",
+            "keywords": ["agent", "harness", "evaluation"],
+        })
+
+        class FakeMcp:
+            async def discover(self, arguments: dict) -> dict:
+                return {"data": {"papers": [{
+                    "arxivId": "2601.12345v2", "title": "A Harness",
+                    "publicationDate": "2026-01-03", "abstractPreview": "Agent evaluation",
+                }]}}
+
+        batch = AlphaXivProvider(ProviderSourceConfig(enabled=True, mode="live"),
+                                [topic], FakeMcp()).fetch({})
+        self.assertEqual(batch.records[0].external_id, "2601.12345")
+        self.assertEqual(batch.records[0].payload["abstract"], "Agent evaluation")
+        self.assertEqual(parse_page_xml(
+            '<paper><page num="2">The method <b>compares</b> agents.</page></paper>'
+        ), [(2, "The method compares agents.")])
+        with self.assertRaises(ValueError):
+            parse_page_xml('<paper><page num="1"> </page></paper>')
+
     def test_alphaxiv_mcp_arguments_and_stable_ids(self) -> None:
         class FakeMcp:
             arguments: dict | None = None

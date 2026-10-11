@@ -18,6 +18,7 @@ from frontierops.review import run_review
 from frontierops.render import run_render
 from frontierops.setup import run_setup
 from frontierops.adapters.discovery_server import create_discovery_server
+from frontierops.evidence import run_evidence
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -32,6 +33,10 @@ def _parser() -> argparse.ArgumentParser:
     sync.add_argument("--config", type=Path, required=True)
     rank = commands.add_parser("rank", help="score and gate synchronized research signals")
     rank.add_argument("--run", type=Path, required=True)
+    evidence = commands.add_parser("evidence", help="add verified PDF pages from alphaXiv MCP")
+    evidence.add_argument("--run", type=Path, required=True)
+    evidence.add_argument("--candidate", required=True)
+    evidence.add_argument("--query", action="append", required=True)
     discovery = commands.add_parser("discovery", help="serve an interactive discovery selection")
     discovery_actions = discovery.add_subparsers(dest="action", required=True)
     discovery_serve = discovery_actions.add_parser("serve")
@@ -95,6 +100,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "rank":
             print(run_rank(args.run))
+            return 0
+        if args.command == "evidence":
+            print(run_evidence(args.run, args.candidate, args.query))
             return 0
         if args.command == "discovery":
             server, url = create_discovery_server(args.run, args.port)

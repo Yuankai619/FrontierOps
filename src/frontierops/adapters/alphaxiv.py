@@ -6,6 +6,7 @@ import json
 import os
 import re
 from typing import Any, Protocol
+import xml.etree.ElementTree as ET
 
 from frontierops.domain.models import ProviderSourceConfig, SourceBatch, SourceRecord, TopicConfig
 
@@ -19,6 +20,23 @@ class AlphaXivMcpClient:
         self.endpoint, self.api_key, self.timeout = endpoint, api_key, timeout
 
     async def discover(self, arguments: dict[str, Any]) -> Any:
+        result = await self._call("discover_papers", arguments)
+        if result.structured_content is not None:
+            return result.structured_content
+        text = "\n".join(block.text for block in result.content if block.type == "text")
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError as error:
+            raise ValueError("alphaXiv returned non-JSON discovery content; cannot sync stable IDs") from error
+
+    async def answer_pdf_queries(self, paper: str, queries: list[str]) -> str:
+        result = await self._call("answer_pdf_queries", {"paper": paper, "queries": queries})
+        text = "\n".join(block.text for block in result.content if block.type == "text")
+        if not text:
+            raise ValueError("alphaXiv returned no page-level PDF text")
+        return text
+
+    async def _call(self, name: str, arguments: dict[str, Any]) -> Any:
         try:
             import httpx2
             from mcp import ClientSession
@@ -31,16 +49,10 @@ class AlphaXivMcpClient:
             async with streamable_http_client(self.endpoint, http_client=http) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
-                    result = await session.call_tool("discover_papers", arguments)
+                    result = await session.call_tool(name, arguments)
                     if result.is_error:
-                        raise RuntimeError("alphaXiv discover_papers returned an MCP error")
-                    if result.structured_content is not None:
-                        return result.structured_content
-                    text = "\n".join(block.text for block in result.content if block.type == "text")
-                    try:
-                        return json.loads(text)
-                    except json.JSONDecodeError as error:
-                        raise ValueError("alphaXiv returned non-JSON discovery content; cannot sync stable IDs") from error
+                        raise RuntimeError(f"alphaXiv {name} returned an MCP error")
+                    return result
 
 
 class AlphaXivProvider:
@@ -91,6 +103,8 @@ class AlphaXivProvider:
 
 
 def _papers(result: Any) -> list[dict]:
+    if isinstance(result, dict) and isinstance(result.get("data"), (list, dict)):
+        result = result["data"]
     if isinstance(result, dict):
         for key in ("papers", "results", "items"):
             if isinstance(result.get(key), list):
@@ -102,24 +116,46 @@ def _papers(result: Any) -> list[dict]:
 
 
 def _record(paper: dict, topic_id: str) -> SourceRecord:
-    identifier = paper.get("arxiv_id") or paper.get("universal_paper_id")
-    url = paper.get("url") or paper.get("paper_url") or ""
-    if not identifier:
+    url = paper.get("url") or paper.get("paper_url") or paper.get("paperUrl") or ""
+    arxiv_id = paper.get("arxiv_id") or paper.get("arxivId")
+    if not arxiv_id:
         match = re.search(r"(?:arxiv\.org|alphaxiv\.org)/(?:abs|pdf)/([^/?#]+)", url)
-        identifier = match.group(1) if match else None
+        arxiv_id = match.group(1) if match else None
+    identifier = arxiv_id or paper.get("universal_paper_id") or paper.get("universalPaperId")
     if not identifier:
         raise ValueError("alphaXiv paper lacks a stable arXiv/universal ID")
     identifier = re.sub(r"v\d+$", "", str(identifier))
-    published = paper.get("publication_date") or paper.get("published_at")
+    arxiv_id = re.sub(r"v\d+$", "", str(arxiv_id)) if arxiv_id else None
+    published = (paper.get("publication_date") or paper.get("publicationDate") or
+                 paper.get("published_at"))
     when = datetime.fromisoformat(str(published).replace("Z", "+00:00")) if published else datetime.now(timezone.utc)
     if when.tzinfo is None:
         when = when.replace(tzinfo=timezone.utc)
     payload = {
-        "title": paper.get("title") or "", "abstract": paper.get("abstract") or paper.get("abstract_preview") or "",
+        "title": paper.get("title") or "", "abstract": (paper.get("abstract") or
+                 paper.get("abstract_preview") or paper.get("abstractPreview") or ""),
         "published_at": published, "year": when.year if published else None,
-        "authors": paper.get("authors") or [], "url": url or f"https://arxiv.org/abs/{identifier}",
-        "pdf_url": f"https://arxiv.org/pdf/{identifier}",
-        "arxiv_id": identifier, "topic_ids": [topic_id],
+        "authors": paper.get("authors") or [],
+        "url": url or (f"https://arxiv.org/abs/{arxiv_id}" if arxiv_id else ""),
+        "pdf_url": (paper.get("pdf_url") or paper.get("pdfUrl") or
+                    (f"https://arxiv.org/pdf/{arxiv_id}" if arxiv_id else None)),
+        "arxiv_id": arxiv_id, "topic_ids": [topic_id],
         "organizations": paper.get("contributing_organizations") or [],
     }
     return SourceRecord(provider="alphaxiv", external_id=identifier, updated_at=when, payload=payload)
+
+
+def parse_page_xml(payload: str) -> list[tuple[int, str]]:
+    root = ET.fromstring(payload)
+    if root.tag != "paper":
+        raise ValueError("alphaXiv page response must have a paper root")
+    pages = []
+    for node in root.findall("page"):
+        number = int(node.attrib["num"])
+        text = "".join(node.itertext()).strip()
+        if number < 1 or not text:
+            continue
+        pages.append((number, text))
+    if not pages:
+        raise ValueError("alphaXiv returned no cited PDF pages")
+    return pages

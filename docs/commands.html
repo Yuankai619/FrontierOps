@@ -17,6 +17,7 @@ frontier --help</code></pre></section>
 <tr><td><code>frontier build --config PATH</code></td><td>驗證 YAML，建立 Run 與設定快照；不抓論文。</td></tr>
 <tr><td><code>frontier sync --config PATH</code></td><td>使用者觸發後抓資料，依上次成功狀態產生新／更新訊號；輸出 Run 絕對路徑。來源錯誤會留在 stage result。</td></tr>
 <tr><td><code>frontier rank --run PATH</code></td><td>對該 Run 的訊號做 Gate、排序與 Evidence 擷取，產生 Discover 頁。不會把舊論文重算成新論文。</td></tr>
+<tr><td><code>frontier evidence --run PATH --candidate ID --query QUESTION</code></td><td>Briefing Skill 的可選內部步驟：透過 alphaXiv MCP 為已選論文加入附頁碼的 PDF 證據；可重複 <code>--query</code>。需要環境中的 alphaXiv API key；不會更動排名。Agent 仍須對照原 PDF 查證。</td></tr>
 <tr><td><code>frontier discovery serve --run PATH</code></td><td>開啟只綁本機的互動頁，驗證並保存選取檔。終止服務後，已儲存的 JSON 仍在 Run。</td></tr>
 <tr><td><code>frontier brief --run PATH</code></td><td>讀同一 Run 的候選與選取檔，寫可修改的草稿；自動抽句需回原文檢查。</td></tr>
 <tr><td><code>frontier review --run PATH</code></td><td>核對來源 ID、數字、精確引句和規則；失敗時阻止 Render。無法取代語意審稿。</td></tr>
