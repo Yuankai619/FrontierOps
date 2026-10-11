@@ -52,6 +52,9 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - Scholar and venue resolvers return stable IDs plus disambiguation metadata.
 - Offline fixtures define the contract; live provider adapters can replace them without changing use cases.
 - Multiple identity candidates require explicit user confirmation before config apply.
+- `skills/frontier-config/SKILL.md` is the canonical portable natural-language configuration workflow.
+- The Skill delegates reasoning to the host coding agent and composes Harness commands; it does not embed an LLM client or agent framework.
+- Its safe mutation sequence is `schema/inspect -> draft -> resolve -> validate -> diff -> apply`; preview-only requests and unresolved identities stop before apply.
 
 ## Runtime and acceptance
 
