@@ -17,6 +17,7 @@ from frontierops.brief import run_brief
 from frontierops.review import run_review
 from frontierops.render import run_render
 from frontierops.setup import run_setup
+from frontierops.adapters.discovery_server import create_discovery_server
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -31,6 +32,11 @@ def _parser() -> argparse.ArgumentParser:
     sync.add_argument("--config", type=Path, required=True)
     rank = commands.add_parser("rank", help="score and gate synchronized research signals")
     rank.add_argument("--run", type=Path, required=True)
+    discovery = commands.add_parser("discovery", help="serve an interactive discovery selection")
+    discovery_actions = discovery.add_subparsers(dest="action", required=True)
+    discovery_serve = discovery_actions.add_parser("serve")
+    discovery_serve.add_argument("--run", type=Path, required=True)
+    discovery_serve.add_argument("--port", type=int, default=0)
     brief = commands.add_parser("brief", help="build a duration-aware briefing draft")
     brief.add_argument("--run", type=Path, required=True)
     review = commands.add_parser("review", help="validate and approve a briefing draft")
@@ -89,6 +95,16 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "rank":
             print(run_rank(args.run))
+            return 0
+        if args.command == "discovery":
+            server, url = create_discovery_server(args.run, args.port)
+            print(url, flush=True)
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+            finally:
+                server.server_close()
             return 0
         if args.command == "brief":
             print(run_brief(args.run))

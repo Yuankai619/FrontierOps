@@ -327,6 +327,18 @@ class BriefingCandidate(Artifact):
     paper_explanation: PaperExplanation | None = None
 
 
+class BriefingSelection(StrictModel):
+    schema_version: Literal["0.1"] = "0.1"
+    run_id: str
+    selected_candidate_ids: list[str] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def unique_ids(self) -> "BriefingSelection":
+        if len(set(self.selected_candidate_ids)) != len(self.selected_candidate_ids):
+            raise ValueError("selected candidate IDs must be unique")
+        return self
+
+
 class ResearchDevelopment(Artifact):
     title: str
     member_candidate_ids: list[str]

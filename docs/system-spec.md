@@ -79,7 +79,8 @@
 - Local library root 預設限制在 project 內；PDF Evidence 保存 page／bbox，文字 Evidence 保存 line locator。
 - OpenReview 使用官方 API v2 client，保存 forum、invitation、reply 與 decision provenance；認證只存在環境。
 - Rank 輸出 Evidence、合格／排除候選與可重現 ranking report；factual explanation 必須引用 abstract 或 page-level Evidence。
-- Discover 入口把 Sync＋Rank 結果呈現在 `project.output_dir/discoveries/<run-id>.html`，顯示合格／排除、每條 Gate、排序特徵與論文問題，不將分數說成品質或真偽機率。
+- Discover 入口把 Sync＋Rank 結果呈現在 `project.output_dir/discoveries/<run-id>.html`，顯示本次新增／更新與先前 Run 的時間序列、合格／排除、每條 Gate 與排序特徵；舊論文只作歷史清單，不以新設定重算分數。若設定雜湊改變，頁面須提示比較範圍不同。不可把 heuristic 抽句或排序分數當成已查證的論文品質。
+- `frontier discovery serve --run PATH` 僅綁定 loopback，提供暫時互動頁。研究者在頁面勾選後，伺服器驗證 Run ID 與合格 candidate ID，寫入 `02-rank/briefing-selection.json`；Brief 只採用此檔指定的候選。純靜態 HTML 只能下載同格式 JSON，無法直接改寫自己的檔案。選取檔是可追溯的 Run artifact，不需要資料庫；沒有選取檔時維持既有預設。
 - 使用者操作面是可安裝的 Agent plugin（Claude、Codex、Copilot）及 Setup／Config／Discover／Briefing 四個 Skill。六個 CLI 階段仍保留可測試的 Artifacts，但不要求研究人員逐段下指令；plugin 只提供工作流程，Python Harness 由 Setup 透過 uv 安裝。
 - Brief 將跨來源候選聚合成 persistent developments，抑制 unchanged items，並產生可調時間的 renderer-neutral spec。
 - Review 是發布邊界；schema、duration、duplicate、Evidence reference 與 numeric-support 錯誤都必須阻擋核准。

@@ -29,7 +29,17 @@ class BriefService:
         history: list[dict[str, Any]],
         run_id: str,
         now: datetime,
+        selected_candidate_ids: list[str] | None = None,
     ) -> BriefOutput:
+        if selected_candidate_ids is not None:
+            by_id = {item.artifact_id: item for item in candidates}
+            for candidate_id in selected_candidate_ids:
+                candidate = by_id.get(candidate_id)
+                if candidate is None or candidate.paper_explanation is None or any(
+                    gate.result == "exclude" for gate in candidate.gate_trace
+                ):
+                    raise ValueError(f"invalid briefing selection: {candidate_id}")
+            candidates = [by_id[item] for item in selected_candidate_ids]
         groups = _groups(candidates)
         previous = {item["development_id"]: item for item in history}
         developments: list[ResearchDevelopment] = []
