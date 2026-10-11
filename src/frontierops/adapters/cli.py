@@ -12,6 +12,7 @@ from frontierops.build import run_build
 from frontierops.config import config_service
 from frontierops.identity import identity_service
 from frontierops.sync import run_sync
+from frontierops.rank import run_rank
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -21,6 +22,8 @@ def _parser() -> argparse.ArgumentParser:
     build.add_argument("--config", type=Path, required=True)
     sync = commands.add_parser("sync", help="manually fetch source deltas")
     sync.add_argument("--config", type=Path, required=True)
+    rank = commands.add_parser("rank", help="score and gate synchronized research signals")
+    rank.add_argument("--run", type=Path, required=True)
 
     schema = commands.add_parser("schema", help="print a JSON schema")
     schema_commands = schema.add_subparsers(dest="resource", required=True)
@@ -62,6 +65,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "sync":
             print(run_sync(args.config))
+            return 0
+        if args.command == "rank":
+            print(run_rank(args.run))
             return 0
         if args.command in ("scholar", "venue"):
             identities = identity_service()

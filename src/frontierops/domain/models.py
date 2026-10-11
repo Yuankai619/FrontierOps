@@ -72,6 +72,66 @@ class SourcesConfig(StrictModel):
     openreview: OpenReviewSourceConfig = Field(default_factory=OpenReviewSourceConfig)
 
 
+class TopicConfig(StrictModel):
+    id: str
+    description: str
+    weight: float = Field(default=1.0, ge=0)
+
+
+class KeywordsConfig(StrictModel):
+    include: list[str] = Field(default_factory=list)
+    exclude: list[str] = Field(default_factory=list)
+
+
+class ProfileConfig(StrictModel):
+    topics: list[TopicConfig] = Field(default_factory=list)
+    keywords: KeywordsConfig = Field(default_factory=KeywordsConfig)
+
+
+class GateConfig(StrictModel):
+    id: str
+    type: Literal["publication_year", "citation", "relevance"]
+    enabled: bool = True
+    on_fail: Literal["exclude", "warn"] = "exclude"
+    min_year: int | None = None
+    minimum_count: int | None = Field(default=None, ge=0)
+    exempt_if_age_days_lte: int = Field(default=0, ge=0)
+    minimum: float | None = Field(default=None, ge=0, le=1)
+
+    @model_validator(mode="after")
+    def required_threshold_is_present(self) -> "GateConfig":
+        required = {
+            "publication_year": self.min_year,
+            "citation": self.minimum_count,
+            "relevance": self.minimum,
+        }
+        if required[self.type] is None:
+            raise ValueError(f"{self.type} gate requires its threshold")
+        return self
+
+
+class FeatureConfig(StrictModel):
+    enabled: bool = True
+    weight: float = Field(default=0.0, ge=0)
+
+
+class RankingFeatures(StrictModel):
+    lexical_relevance: FeatureConfig = Field(
+        default_factory=lambda: FeatureConfig(weight=0.55)
+    )
+    citation: FeatureConfig = Field(default_factory=lambda: FeatureConfig(weight=0.15))
+    freshness: FeatureConfig = Field(default_factory=lambda: FeatureConfig(weight=0.15))
+    reliability: FeatureConfig = Field(default_factory=lambda: FeatureConfig(weight=0.15))
+
+
+class RankingConfig(StrictModel):
+    gates: list[GateConfig] = Field(default_factory=list)
+    features: RankingFeatures = Field(default_factory=RankingFeatures)
+    citation_scale: int = Field(default=100, gt=0)
+    freshness_half_life_days: int = Field(default=180, gt=0)
+    source_reliability: dict[str, float] = Field(default_factory=dict)
+
+
 class BriefConfig(StrictModel):
     target_duration_seconds: int = Field(default=300, gt=0)
     maximum_developments: int = Field(default=5, gt=0)
@@ -106,6 +166,8 @@ class FrontierConfig(StrictModel):
     project: ProjectConfig
     tracking: TrackingConfig = Field(default_factory=TrackingConfig)
     sources: SourcesConfig = Field(default_factory=SourcesConfig)
+    profile: ProfileConfig = Field(default_factory=ProfileConfig)
+    ranking: RankingConfig = Field(default_factory=RankingConfig)
     sync: SyncConfig = Field(default_factory=SyncConfig)
     brief: BriefConfig = Field(default_factory=BriefConfig)
 
@@ -180,7 +242,7 @@ class SourceBatch(StrictModel):
 class Evidence(Artifact):
     source_ref: str
     source_uri: str
-    locator: dict[str, str]
+    locator: dict[str, Any]
     content: str
     evidence_tier: str
 

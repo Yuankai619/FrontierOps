@@ -8,6 +8,8 @@
       "title": "Paper2Video: Automatic Video Generation from Scientific Papers",
       "authors": ["Zeyu Zhu", "Kevin Qinghong Lin", "Mike Zheng Shou"],
       "categories": ["cs.CV", "cs.AI", "cs.CL", "cs.MA", "cs.MM"],
+      "year": 2025,
+      "citationCount": 29,
       "abstract": "Paper2Video pairs 101 papers with presentation videos and introduces PaperTalker for automatic academic video generation.",
       "pdf_url": "https://arxiv.org/pdf/2510.05096"
     }
