@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Protocol
 
-from frontierops.domain.models import ScholarIdentity, VenueIdentity
+from frontierops.domain.models import ScholarIdentity, SourceBatch, VenueIdentity
 
 
 class ConfigReader(Protocol):
@@ -29,6 +29,19 @@ class StateIndex(Protocol):
     def record_run(
         self, workspace: Path, run_id: str, status: str, manifest_path: Path, created_at: datetime
     ) -> None: ...
+
+
+class SyncProvider(Protocol):
+    name: str
+
+    def fetch(self, cursor: Mapping[str, Any]) -> SourceBatch: ...
+
+
+class SyncRepository(Protocol):
+    def load_state(self, workspace: Path) -> dict[str, Any]: ...
+    def cache_raw(self, workspace: Path, provider: str, payload: Mapping[str, Any]) -> str: ...
+    def save_stage(self, run_dir: Path, files: Mapping[str, Any]) -> None: ...
+    def commit_state(self, workspace: Path, state: Mapping[str, Any]) -> None: ...
 
 
 class ScholarResolver(Protocol):

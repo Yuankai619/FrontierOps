@@ -18,6 +18,14 @@ tracking:
     - provider: openreview
       venue_id: ICLR.cc/2026/Conference
       decisions: [Accept, "Accept (Oral)"]
+sources:
+  semantic_scholar:
+    enabled: false
+  arxiv:
+    enabled: true
+    mode: fixture
+    fixture_path: data/fixtures/arxiv-papers.json
+    overlap_days: 3
 sync:
   trigger_mode: manual
   baseline: last_successful_sync

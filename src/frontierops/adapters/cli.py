@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from frontierops.build import run_build
 from frontierops.config import config_service
 from frontierops.identity import identity_service
+from frontierops.sync import run_sync
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -18,6 +19,8 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     build = commands.add_parser("build", help="validate config and initialize a run")
     build.add_argument("--config", type=Path, required=True)
+    sync = commands.add_parser("sync", help="manually fetch source deltas")
+    sync.add_argument("--config", type=Path, required=True)
 
     schema = commands.add_parser("schema", help="print a JSON schema")
     schema_commands = schema.add_subparsers(dest="resource", required=True)
@@ -56,6 +59,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "build":
             print(run_build(args.config))
+            return 0
+        if args.command == "sync":
+            print(run_sync(args.config))
             return 0
         if args.command in ("scholar", "venue"):
             identities = identity_service()
