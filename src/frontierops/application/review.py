@@ -63,6 +63,16 @@ class ReviewService:
                 )
                 checks.append(check)
                 issues.extend(claim_issues)
+            for excerpt in section.get("source_excerpts", []):
+                source = evidence_by_id.get(excerpt.get("evidence_id"))
+                quote = " ".join(excerpt.get("quote", "").split())
+                content = " ".join(source.content.split()) if source else ""
+                if not source or quote not in content:
+                    issues.append(ReviewIssue(
+                        code="invalid_source_excerpt", severity="error",
+                        message="source excerpt is absent from cited Evidence",
+                        section_id=section_id,
+                    ))
 
         approved = None
         try:
