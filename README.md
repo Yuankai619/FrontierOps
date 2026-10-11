@@ -20,7 +20,7 @@ Build -> Sync -> Rank -> Brief -> Review -> Render
 - 由使用者執行 `frontier sync` 才比較上次成功狀態；不啟動背景排程。
 - 保存 immutable raw cache，並以 stable external ID 與內容雜湊避免重複訊號。
 
-Sync 支援凍結 fixture、arXiv／Semantic Scholar live provider、OpenReview 與本地 PDF／文字庫。Rank 會依 YAML Gate 與可解釋分數挑選新研究，Brief 產生可調時間的 `BriefingSpec`，Review 則在發布前阻擋缺少 Evidence、引用失效、數字無依據、重複研究與超時內容。HTML／Slides／Video 仍在後續 stacked PR 實作。
+Sync 支援凍結 fixture、arXiv／Semantic Scholar live provider、OpenReview 與本地 PDF／文字庫。Rank 會依 YAML Gate 與可解釋分數挑選新研究，Brief 產生可調時間的 `BriefingSpec`，Review 則在發布前阻擋缺少 Evidence、引用失效、數字無依據、重複研究與超時內容。Render 已能產生 portable HTML briefing；Slides／Video 仍在後續 stacked PR 實作。
 
 Live arXiv 依 `paper_ids`、`queries` 或 `categories` 查詢並保留 base ID 與 version。Semantic Scholar 依 tracker 中已解析的 stable author ID 分頁取得論文；`SEMANTIC_SCHOLAR_API_KEY` 是選用項，未設定時使用公開無金鑰額度。Live smoke test 不放入 deterministic CI。
 
@@ -186,6 +186,7 @@ uv run --locked frontier sync --config frontier.yaml.example
 uv run --locked frontier rank --run <sync-run-path>
 uv run --locked frontier brief --run <ranked-run-path>
 uv run --locked frontier review --run <briefed-run-path>
+uv run --locked frontier render --run <approved-run-path>
 ```
 
 第二個指令成功後會印出本次 Run 的完整路徑。

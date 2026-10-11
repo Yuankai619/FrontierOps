@@ -6,6 +6,7 @@ import unittest
 from frontierops.brief import run_brief
 from frontierops.rank import run_rank
 from frontierops.review import run_review
+from frontierops.render import run_render
 from frontierops.sync import run_sync
 
 
@@ -41,6 +42,12 @@ ranking:
             self.assertEqual(manifest["stages"]["review"], "04-review/stage-result.json")
             self.assertEqual(manifest["outputs"]["approved_briefing"],
                              "04-review/briefing.approved.json")
+            run_render(run)
+            html = (run / "05-render/briefing.html").read_text()
+            render_result = json.loads((run / "05-render/render-result.json").read_text())
+            self.assertIn("Paper2Video research presentation", html)
+            self.assertEqual(render_result["outputs"], {"html": "05-render/briefing.html"})
+            self.assertEqual(render_result["missing_targets"], ["slides", "video"])
 
             draft_path = run / "03-brief/briefing.draft.json"
             draft = json.loads(draft_path.read_text())

@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Protocol
 
-from frontierops.domain.models import ScholarIdentity, SourceBatch, VenueIdentity
+from frontierops.domain.models import BriefingSpec, Evidence, ScholarIdentity, SourceBatch, VenueIdentity
 
 
 class ConfigReader(Protocol):
@@ -58,3 +58,9 @@ class EnvironmentReader(Protocol):
 
 class Clock(Protocol):
     def now(self) -> datetime: ...
+
+
+class BriefingRenderer(Protocol):
+    target: str
+
+    def render(self, briefing: BriefingSpec, evidence: list[Evidence]) -> str: ...
