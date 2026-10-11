@@ -148,6 +148,24 @@ uv run --locked frontier build --config frontier.yaml.example
 
 第二個指令成功後會印出本次 Run 的完整路徑。
 
+## Config lifecycle
+
+以下介面供使用者及 `frontier-config` Skill 建立安全的設定變更：
+
+```bash
+uv run --locked frontier schema config --format json
+uv run --locked frontier config inspect --config frontier.yaml
+uv run --locked frontier config validate --config frontier.yaml
+uv run --locked frontier config draft --config frontier.yaml --output /tmp/frontier-candidate.yaml
+uv run --locked frontier config diff --old frontier.yaml --new /tmp/frontier-candidate.yaml
+uv run --locked frontier config apply --candidate /tmp/frontier-candidate.yaml --config frontier.yaml
+```
+
+- `inspect` 與 `draft` 會 materialize 所有預設值。
+- `diff` 會輸出穩定的 JSON path、before 與 after，方便 Agent 與人類檢查。
+- `apply` 會先驗證完整 candidate，再以 atomic replace 寫入；驗證失敗不修改目標檔案。
+- 設定只保存 secret 的環境變數名稱，不應放入 API key value。
+
 ## E2E 驗收步驟
 
 ### 1. 驗證安裝與全部測試
@@ -157,7 +175,7 @@ uv sync --locked
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-預期結果：4 個測試全部顯示 `ok`，最後輸出 `OK`。
+預期結果：9 個測試全部顯示 `ok`，最後輸出 `OK`。
 
 ### 2. 執行真實 CLI 流程
 

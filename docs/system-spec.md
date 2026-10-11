@@ -41,6 +41,14 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - `frontier.yaml` owns domain policy; unknown fields fail and secrets are only environment references.
 - Gates pass, exclude, warn, or exempt candidates; scores only order eligible candidates.
 
+## Configuration lifecycle
+
+- `schema` and `inspect` expose machine-readable contracts and effective defaults.
+- `validate` rejects unknown fields before any external work begins.
+- `diff` compares materialized configs using stable paths rather than YAML formatting.
+- `draft` writes a temporary candidate; `apply` validates it before an atomic replacement.
+- Coding-agent Skills must use these commands instead of editing active configuration blindly.
+
 ## Runtime and acceptance
 
 - Python 3.12 and `uv` are required; `uv.lock` and `uv sync --locked` make installs reproducible.

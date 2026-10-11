@@ -11,14 +11,6 @@ import yaml
 from frontierops import __version__
 
 
-class YamlConfigReader:
-    def read(self, path: Path) -> Mapping[str, Any]:
-        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
-        if not isinstance(payload, dict):
-            raise ValueError("configuration must be a YAML mapping")
-        return payload
-
-
 class FileRunRepository:
     def save(self, workspace: Path, run_id: str, files: Mapping[str, Any]) -> Path:
         run_dir = workspace / "runs" / run_id
