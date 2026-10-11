@@ -8,11 +8,15 @@ from frontierops.domain.models import BriefingCandidate
 
 def render_discovery(candidates: list[BriefingCandidate], weights: dict, *, run_id: str = "",
                      history: list[dict] | None = None, previous: list[dict] | None = None,
-                     config_changed: bool = False) -> str:
+                     config_changed: bool = False, topic_delta: dict | None = None) -> str:
     enabled = {key: val["weight"] for key, val in weights.items() if val["enabled"]}
     denominator = sum(enabled.values()) or 1.0
     eligible = sum(not _excluded(item) for item in candidates)
-    cards = "\n".join(_candidate(item, enabled, denominator) for item in candidates)
+    delta_labels = {entry["subject_id"]: _STATUS[entry["status"]]
+                    for topic in (topic_delta or {}).get("topics", [])
+                    for entry in topic["entries"] if entry["current_rank"] is not None}
+    cards = "\n".join(_candidate(item, enabled, denominator,
+                                 delta_labels.get(item.subject_id)) for item in candidates)
     if not cards:
         cards = '<p>這次沒有新增或更新的論文。下方保留先前 Run 的紀錄。</p>'
     timeline = "".join(
@@ -21,7 +25,10 @@ def render_discovery(candidates: list[BriefingCandidate], weights: dict, *, run_
         for row in (history or [])
     )
     prior = "".join(f'<li>{escape(str(item["title"]))}</li>' for item in (previous or []))
-    scope = ("設定已變動；舊清單是歷史收錄，不代表新設定下的完整庫存。" if config_changed
+    topic_view = _topic_delta_html(topic_delta or {})
+    scope = ("主題檢索會重評本次回傳的候選；查詢範圍改變時，新命中不等於新發表。"
+             if (topic_delta or {}).get("topics") else
+             "設定已變動；舊清單是歷史收錄，不代表新設定下的完整庫存。" if config_changed
              else "本次只排名新增或更新項目；舊清單不會重複排名。")
     return f'''<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>FrontierOps｜研究更新</title>
@@ -35,7 +42,8 @@ article{{border-top:1px solid var(--line);padding:25px 0}}article:last-child{{bo
 .select input{{width:20px;height:20px}}details{{margin-top:12px}}summary{{cursor:pointer}}.actions{{border-top:2px solid #111;margin-top:34px;padding-top:20px}}#save-status{{min-height:25px}}[hidden]{{display:none!important}}
 @media(max-width:600px){{body{{padding:18px}}input[type=search]{{min-width:100%}}}}</style></head><body>
 <header><h1>研究更新</h1><p class="muted">Run：{escape(run_id)}。分數只是目前 frontier.yaml 下的排序，不代表論文品質。</p></header>
-<div class="summary"><div><strong>{len(candidates)}</strong>本次新增或更新</div><div><strong>{eligible}</strong>符合設定</div><div><strong>{len(previous or [])}</strong>先前收錄</div></div>
+<div class="summary"><div><strong>{len(candidates)}</strong>{'本次檢索候選' if (topic_delta or {}).get('topics') else '本次新增或更新'}</div><div><strong>{eligible}</strong>符合設定</div><div><strong>{len(previous or [])}</strong>先前收錄</div></div>
+{topic_view}
 <section class="history"><h2>同步紀錄</h2><p>{escape(scope)}</p><table><thead><tr><th>Run</th><th>新增</th><th>更新</th><th>未變</th></tr></thead><tbody>{timeline}</tbody></table>
 <details><summary>查看先前收錄</summary><ul>{prior or '<li>尚無先前論文</li>'}</ul></details></section>
 <div class="controls" aria-label="篩選論文"><button data-filter="all" aria-pressed="true">全部</button><button data-filter="included" aria-pressed="false">合格</button>
@@ -55,11 +63,57 @@ def _excluded(item: BriefingCandidate) -> bool:
     return any(gate.result == "exclude" for gate in item.gate_trace)
 
 
-def _candidate(item: BriefingCandidate, weights: dict[str, float], denominator: float) -> str:
+_STATUS = {
+    "baseline": "首次建立基準", "new_in_scope": "新納入查詢範圍",
+    "published_since_last_run": "上次執行後發表", "newly_observed": "本次才查得",
+    "newly_eligible": "新符合 Gate", "newly_excluded": "新被 Gate 排除",
+    "ranking_changed": "排名或 Gate 變動", "unchanged": "未變",
+    "not_returned": "本次未回傳（不代表撤稿）",
+}
+
+
+def _topic_delta_html(report: dict) -> str:
+    sections = []
+    for topic in report.get("topics", []):
+        if topic["previous_run"] is None:
+            note = "首次建立基準；這些論文不是全部在今天新發表。"
+        elif topic["scope_changed"]:
+            note = "查詢條件或日期範圍已改變；新命中是新納入範圍，不代表上次執行後才發表。"
+        else:
+            note = "與上一次相同主題查詢比較；來源晚收錄的舊論文會標為「本次才查得」。"
+        if topic["policy_changed"]:
+            note += " Gate 已變動；分數與資格依各自 Run 的設定計算。"
+        if any(scope.get("truncated") or scope.get("coverage") == "top_k_only"
+               for scope in topic["coverage"] + topic.get("previous_coverage", [])):
+            note += " 本次或上次來源結果有上限，本表不是全量論文差異。"
+        rows = []
+        for entry in topic["entries"]:
+            old_rank = entry["previous_rank"] or "—"
+            new_rank = entry["current_rank"] or "—"
+            old_score = "—" if entry["previous_score"] is None else f'{entry["previous_score"]*100:.1f}'
+            new_score = "—" if entry["current_score"] is None else f'{entry["current_score"]*100:.1f}'
+            gates = ", ".join(f"{key}: {value}" for key, value in (entry["current_gates"] or {}).items()) or "—"
+            rows.append(f'<tr><td>{escape(entry["title"])}</td><td>{escape(_STATUS[entry["status"]])}</td>'
+                        f'<td>{old_rank} → {new_rank}</td><td>{old_score} → {new_score}</td>'
+                        f'<td>{escape(gates)}</td></tr>')
+        counts = " · ".join(f'{_STATUS[key]} {count}' for key, count in topic["counts"].items())
+        detail_open = " open" if len(rows) <= 25 else ""
+        sections.append(f'<section class="history"><h2>{escape(topic["topic_id"])}</h2><p>{escape(note)}</p>'
+                        f'<p>{escape(counts)}</p><p class="muted">比較基準：{escape(topic["previous_run"] or "無")}</p>'
+                        f'<details{detail_open}><summary>查看 {len(rows)} 篇論文的前後差異</summary>'
+                        '<table><thead><tr><th>論文</th><th>變化</th><th>排名</th><th>分數</th><th>目前 Gate</th>'
+                        f'</tr></thead><tbody>{"".join(rows)}</tbody></table></details></section>')
+    return "\n".join(sections)
+
+
+def _candidate(item: BriefingCandidate, weights: dict[str, float], denominator: float,
+               delta_label: str | None = None) -> str:
     excluded = _excluded(item)
     gates = "".join(f"<tr><td>{escape(g.gate)}</td><td>{escape(g.result)}</td><td>{escape(g.reason or '')}</td></tr>" for g in item.gate_trace) or '<tr><td colspan="3">未設定 Gate</td></tr>'
     features = "".join(f"<tr><td>{escape(k)}</td><td>{item.features.get(k, 0):.3f} × {v:.2f}</td><td>{item.features.get(k, 0)*v/denominator*100:.1f}</td></tr>" for k, v in weights.items())
-    select = "" if excluded else f'<label class="select"><input type="checkbox" data-candidate-id="{escape(item.artifact_id, quote=True)}" checked>列入 Briefing</label>'
+    select = "" if excluded or item.paper_explanation is None else f'<label class="select"><input type="checkbox" data-candidate-id="{escape(item.artifact_id, quote=True)}" checked>列入 Briefing</label>'
     return (f'<article data-state="{"excluded" if excluded else "included"}" data-title="{escape(item.title, quote=True)}">'
-            f'<strong>{"已排除" if excluded else "合格候選"}</strong><h2>{escape(item.title)}</h2><p class="score">排序 {item.total_score*100:.1f} / 100</p>{select}'
+            f'<strong>{"已排除" if excluded else "合格候選"}</strong>'
+            f'{" · " + escape(delta_label) if delta_label else ""}<h2>{escape(item.title)}</h2>'
+            f'<p class="score">排序 {item.total_score*100:.1f} / 100</p>{select}'
             f'<details><summary>資格與分數依據</summary><h3>Gate</h3><table>{gates}</table><h3>排序特徵</h3><table>{features}</table></details></article>')

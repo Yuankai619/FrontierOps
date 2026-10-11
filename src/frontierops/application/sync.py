@@ -27,6 +27,7 @@ class SyncUseCase:
         state = self.repository.load_state(workspace)
         provider_state = state.setdefault("providers", {})
         signals: list[dict[str, Any]] = []
+        topic_observations: list[dict[str, Any]] = []
         snapshots: list[dict[str, Any]] = []
         fetched = skipped = 0
 
@@ -52,10 +53,13 @@ class SyncUseCase:
                     "cache_ref": cache_ref,
                 })
                 prior = records.get(record.external_id)
-                if prior and prior["sha256"] == fingerprint:
+                unchanged = bool(prior and prior["sha256"] == fingerprint)
+                if unchanged:
                     skipped += 1
+                if unchanged and not record.payload.get("topic_ids"):
                     continue
-                kind = "paper.new" if prior is None else "paper.updated"
+                kind = ("paper.unchanged" if unchanged else
+                        "paper.new" if prior is None else "paper.updated")
                 artifact_id = "signal_" + _fingerprint({
                     "provider": name, "external_id": record.external_id, "sha256": fingerprint
                 })[:24]
@@ -74,8 +78,11 @@ class SyncUseCase:
                         "updated_at": record.updated_at.isoformat(),
                     },
                 )
-                signals.append(signal.model_dump(mode="json"))
-                records[record.external_id] = {"sha256": fingerprint, "version": record.version}
+                if record.payload.get("topic_ids"):
+                    topic_observations.append(signal.model_dump(mode="json"))
+                if not unchanged:
+                    signals.append(signal.model_dump(mode="json"))
+                    records[record.external_id] = {"sha256": fingerprint, "version": record.version}
             provider_state[name] = {"cursor": batch.next_cursor, "records": records}
 
         finished_at = self.clock.now()
@@ -83,6 +90,7 @@ class SyncUseCase:
             "research_signals": "01-sync/research-signals.jsonl",
             "delta_summary": "01-sync/delta-summary.json",
             "source_cursors": "01-sync/source-cursors.after.json",
+            "topic_observations": "01-sync/topic-observations.jsonl",
         }
         result = StageResult(
             run_id=run_dir.name,
@@ -98,6 +106,7 @@ class SyncUseCase:
         files = {
             "01-sync/raw-snapshot-index.jsonl": snapshots,
             "01-sync/research-signals.jsonl": signals,
+            "01-sync/topic-observations.jsonl": topic_observations,
             "01-sync/delta-summary.json": result.counts,
             "01-sync/source-cursors.after.json": state,
             "01-sync/stage-result.json": result.model_dump(mode="json"),

@@ -67,6 +67,7 @@ class RankService:
                 input_refs=[signal.artifact_id],
                 subject_id=_subject_id(signal),
                 title=title,
+                topic_ids=signal.payload.get("topic_ids", []),
                 research_signal_ids=[signal.artifact_id],
                 evidence_ids=[item.artifact_id for item in item_evidence],
                 features=features,
@@ -153,11 +154,23 @@ def _gate(
 
 
 def _subject_id(signal: ResearchSignal) -> str:
+    external = signal.payload.get("externalIds", {})
+    if signal.source_provider == "openalex":
+        if external.get("DOI"):
+            doi = str(external["DOI"]).removeprefix("https://doi.org/").lower()
+            if doi.startswith("10.48550/arxiv."):
+                return f"arxiv:{doi.removeprefix('10.48550/arxiv.')}"
+            return f"doi:{doi}"
+        return f"openalex:{external.get('OpenAlex') or signal.external_id}"
     if signal.payload.get("arxiv_id"):
         return f"arxiv:{signal.payload['arxiv_id']}"
-    external = signal.payload.get("externalIds", {})
     if external.get("ArXiv"):
         return f"arxiv:{external['ArXiv']}"
+    if external.get("DOI"):
+        doi = str(external["DOI"]).removeprefix("https://doi.org/").lower()
+        if doi.startswith("10.48550/arxiv."):
+            return f"arxiv:{doi.removeprefix('10.48550/arxiv.')}"
+        return f"doi:{doi}"
     return f"{signal.source_provider}:{signal.external_id}"
 
 

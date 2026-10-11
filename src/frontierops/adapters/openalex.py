@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 import json
 import os
+import re
 from time import sleep
 from urllib.parse import urlencode
 
@@ -79,6 +80,9 @@ class OpenAlexProvider:
         oa = work.get("best_oa_location") or {}
         source = location.get("source") or {}
         paper_id = work["id"].rsplit("/", 1)[-1]
+        pdf_url = oa.get("pdf_url") or location.get("pdf_url")
+        arxiv_match = re.search(r"arxiv\.org/(?:abs|pdf)/([^/?#]+)", pdf_url or "")
+        arxiv_id = re.sub(r"v\d+$", "", arxiv_match.group(1)) if arxiv_match else None
         published = work.get("publication_date")
         updated = work.get("updated_date") or published
         timestamp = datetime.fromisoformat(updated.replace("Z", "+00:00")) if updated else datetime.now(timezone.utc)
@@ -90,8 +94,8 @@ class OpenAlexProvider:
             "year": work.get("publication_year"), "published_at": published,
             "citationCount": work.get("cited_by_count"), "venue": source.get("display_name"),
             "url": location.get("landing_page_url") or work["id"],
-            "pdf_url": oa.get("pdf_url") or location.get("pdf_url"),
-            "externalIds": {"DOI": work.get("doi"), "OpenAlex": paper_id},
+            "pdf_url": pdf_url, "arxiv_id": arxiv_id,
+            "externalIds": {"DOI": work.get("doi"), "OpenAlex": paper_id, "ArXiv": arxiv_id},
             "topic_ids": [topic_id],
         }
         return SourceRecord(provider=self.name, external_id=paper_id, updated_at=timestamp, payload=payload)
