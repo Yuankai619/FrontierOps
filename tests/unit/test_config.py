@@ -44,3 +44,11 @@ class ConfigServiceTests(unittest.TestCase):
     def test_apply_materializes_defaults(self) -> None:
         self.service.apply(Path("old"), Path("target"))
         self.assertEqual(self.adapter.documents["target"]["brief"]["target_duration_seconds"], 300)
+
+    def test_enabled_video_preview_requires_an_external_tts_adapter(self) -> None:
+        self.adapter.documents["bad-video"] = {
+            "project": {"id": "demo", "name": "Demo"},
+            "rendering": {"video": {"enabled": True}},
+        }
+        with self.assertRaisesRegex(ValidationError, "heygen_tts_script"):
+            self.service.inspect(Path("bad-video"))
