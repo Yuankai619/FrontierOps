@@ -66,3 +66,4 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - Sync is manually triggered, preserves raw snapshots, and compares stable source IDs plus content hashes against shared last-successful state.
 - Replaying an unchanged fixture produces no new `ResearchSignal` while retaining the new inspectable run.
 - Live arXiv uses the Atom API and preserves base IDs separately from versions; live Semantic Scholar uses stable author IDs and paginated author-paper responses.
+- Local-library roots are config-driven and project-confined by default; parser adapters emit source sections with PDF page/bbox or text line locators.

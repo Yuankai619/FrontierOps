@@ -54,3 +54,29 @@ class SyncIntegrationTests(unittest.TestCase):
             self.assertEqual(
                 (unchanged / "01-sync/research-signals.jsonl").read_text(), ""
             )
+
+    def test_provider_and_local_document_share_one_run(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "papers").mkdir()
+            (root / "papers/paper.txt").write_text("Method and result evidence", encoding="utf-8")
+            (root / "papers.json").write_text(json.dumps([{
+                "provider": "arxiv", "external_id": "2510.05096", "version": "v2",
+                "updated_at": "2025-10-09T17:29:00Z", "payload": {"title": "Paper2Video"},
+            }]), encoding="utf-8")
+            config = CONFIG.replace(
+                "sync:", "  local_library: {enabled: true, roots: [papers]}\nsync:"
+            )
+            (root / "frontier.yaml").write_text(config, encoding="utf-8")
+            run_dir = run_sync(root / "frontier.yaml")
+            signals = [json.loads(line) for line in
+                       (run_dir / "01-sync/research-signals.jsonl").read_text().splitlines()]
+            self.assertEqual({item["source_provider"] for item in signals},
+                             {"arxiv", "local_library"})
+            local = next(item for item in signals if item["source_provider"] == "local_library")
+            self.assertEqual(local["payload"]["sections"][0]["locator"]["type"], "line_range")
+            (root / "papers/paper.txt").touch()
+            unchanged = run_sync(root / "frontier.yaml")
+            self.assertEqual(
+                (unchanged / "01-sync/research-signals.jsonl").read_text(), ""
+            )

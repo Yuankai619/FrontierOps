@@ -24,6 +24,8 @@ Build -> Sync -> Rank -> Brief -> Review -> Render
 
 Live arXiv 依 `paper_ids`、`queries` 或 `categories` 查詢並保留 base ID 與 version。Semantic Scholar 依 tracker 中已解析的 stable author ID 分頁取得論文；`SEMANTIC_SCHOLAR_API_KEY` 是選用項，未設定時使用公開無金鑰額度。Live smoke test 不放入 deterministic CI。
 
+Local Library 由 `sources.local_library.roots` 注入。相對路徑以 `frontier.yaml` 所在目錄為基準，預設禁止 root 或 symlink 逃出 project；PDF 交由 PyMuPDF adapter 解析並保留 1-based page 與 bbox locator，Markdown／文字檔則保留 line-range locator。
+
 ## 架構概覽
 
 專案採用 Hexagonal Architecture，依賴只允許朝核心方向流動：

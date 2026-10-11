@@ -44,9 +44,20 @@ class ProviderSourceConfig(StrictModel):
     categories: list[str] = Field(default_factory=list)
 
 
+class LocalLibraryConfig(StrictModel):
+    enabled: bool = False
+    roots: list[Path] = Field(default_factory=list)
+    recursive: bool = True
+    allowed_extensions: list[Literal[".pdf", ".md", ".txt"]] = Field(
+        default_factory=lambda: [".pdf", ".md", ".txt"]
+    )
+    allow_outside_project_root: bool = False
+
+
 class SourcesConfig(StrictModel):
     semantic_scholar: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
     arxiv: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
+    local_library: LocalLibraryConfig = Field(default_factory=LocalLibraryConfig)
 
 
 class BriefConfig(StrictModel):
