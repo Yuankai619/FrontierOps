@@ -1,6 +1,14 @@
 from html.parser import HTMLParser
 from pathlib import Path
+import re
 import unittest
+
+from frontierops.domain.models import (
+    BriefConfig, FeatureConfig, GateConfig, KeywordsConfig, LocalLibraryConfig,
+    OpenReviewSourceConfig, ProfileConfig, ProjectConfig, ProviderSourceConfig,
+    RankingConfig, RankingFeatures, ReviewConfig, ScholarTracker, SyncConfig,
+    TopicConfig, TopicSearchConfig, VenueTracker, VideoPreviewConfig,
+)
 
 
 DOCS = Path(__file__).resolve().parents[2] / "docs"
@@ -51,6 +59,37 @@ class DocsSiteTests(unittest.TestCase):
         for source in DOCS.glob("*.html"):
             with self.subTest(page=source.name):
                 self.assertNotIn("example.html", source.read_text(encoding="utf-8"))
+
+    def test_public_pages_are_english(self) -> None:
+        for source in DOCS.glob("*.html"):
+            with self.subTest(page=source.name):
+                html = source.read_text(encoding="utf-8")
+                self.assertIn('lang="en"', html)
+                self.assertIsNone(re.search(r"[\u4e00-\u9fff]", html))
+
+    def test_config_reference_covers_every_nested_schema_field(self) -> None:
+        html = (DOCS / "configuration.html").read_text(encoding="utf-8")
+        models = (
+            (ProjectConfig, "project."), (ProviderSourceConfig, ""),
+            (LocalLibraryConfig, "sources.local_library."),
+            (OpenReviewSourceConfig, "sources.openreview."),
+            (ScholarTracker, "tracking.scholars[]."),
+            (VenueTracker, "tracking.venues[]."),
+            (TopicConfig, "profile.topics[]."),
+            (TopicSearchConfig, "profile.topics[].search."),
+            (KeywordsConfig, "profile.keywords."),
+            (GateConfig, "ranking.gates[]."),
+            (RankingConfig, "ranking."),
+            (RankingFeatures, "ranking.features."),
+            (FeatureConfig, "ranking.features.*."),
+            (SyncConfig, "sync."), (BriefConfig, "brief."),
+            (ReviewConfig, "review."),
+            (VideoPreviewConfig, "rendering.video."),
+        )
+        for model, prefix in models:
+            for field in model.model_fields:
+                with self.subTest(field=f"{prefix}{field}"):
+                    self.assertIn(f"<code>{prefix}{field}</code>", html)
 
 
 if __name__ == "__main__":
