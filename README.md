@@ -178,7 +178,7 @@ uv run --locked frontier build --config frontier.yaml.example
 
 ## Config lifecycle
 
-以下介面供使用者及 `frontier-config` Skill 建立安全的設定變更：
+以下介面供使用者及 [`frontier-config` Skill](skills/frontier-config/SKILL.md) 建立安全的設定變更：
 
 ```bash
 uv run --locked frontier schema config --format json
@@ -196,6 +196,20 @@ uv run --locked frontier venue resolve --name ICLR --year 2026 --provider openre
 - `apply` 會先驗證完整 candidate，再以 atomic replace 寫入；驗證失敗不修改目標檔案。
 - 設定只保存 secret 的環境變數名稱，不應放入 API key value。
 - Resolver fixture 只用於離線驗收；多個同名候選必須由使用者確認後才能寫入 tracker。
+
+### 用自然語言建立設定變更
+
+`skills/frontier-config/SKILL.md` 是可由 Codex、Claude Code 等既有 Coding Agent 讀取的 portable Skill。它不包模型或 Agent framework，而是把自然語言設定工作約束成可稽核流程：
+
+```text
+schema / inspect -> draft -> resolve identities -> validate -> diff -> apply
+```
+
+例如可對已載入 Skill 的 Agent 說：
+
+> 請把研究簡報改成 10 分鐘、最多收錄 7 項，並先讓我確認變更，不要直接套用。
+
+Agent 應先建立暫存 candidate，回報 validation 與 semantic diff；使用者只要求預覽時不得執行 `apply`。新增學者或會議若有多個 resolver candidates，也必須停在套用前要求使用者選擇。
 
 ## E2E 驗收步驟
 
