@@ -1,80 +1,63 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="FrontierOps：讓既有 Coding Agent 協助研究者追蹤、查核並解說新論文。">
-  <title>FrontierOps — 讀懂新論文</title>
+  <meta name="description" content="FrontierOps: a local, agent-agnostic harness for tracking and explaining new research papers.">
+  <title>FrontierOps — Understand new research</title>
   <link rel="stylesheet" href="site.css">
 </head>
 <body>
   <header class="site-header">
     <div class="container header-inner">
       <a class="wordmark" href="index.html">FrontierOps</a>
-      <nav aria-label="主選單">
-        <a href="#approach">設計概念</a>
-        <a href="guide.html">使用文件</a>
-        <a href="example.html">實跑範例</a>
+      <nav aria-label="Main navigation">
+        <a href="#approach">Approach</a>
+        <a href="guide.html">Documentation</a>
         <a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a>
       </nav>
     </div>
   </header>
 
   <main>
-    <section class="hero">
-      <div class="container">
-        <h1>FrontierOps</h1>
-        <p class="hero-copy">用既有 Coding Agent 追蹤新論文，檢查原文證據，整理成可回查的研究簡報。同步由研究者啟動，設定與每次執行都留在本地。</p>
-        <div class="actions">
-          <a class="button-primary" href="quick-start.html">Quick Start <span aria-hidden="true">↗</span></a>
-          <a class="plain-link" href="steps.html">四個使用步驟 <span aria-hidden="true">→</span></a>
-        </div>
-      </div>
-    </section>
+    <section class="hero"><div class="container">
+      <h1>FrontierOps</h1>
+      <p class="hero-copy">Track research with the coding agent you already use. Compare each search with your previous run, inspect the evidence, and turn selected papers into clear briefings. Your configuration and run history stay in your workspace.</p>
+      <div class="actions"><a class="button-primary" href="quick-start.html">Get started <span aria-hidden="true">↗</span></a><a class="plain-link" href="guide.html">Read the docs <span aria-hidden="true">→</span></a></div>
+    </div></section>
 
-    <section class="section" id="approach">
-      <div class="container split-section">
-        <h2>論文清單之外</h2>
-        <div class="section-copy">
-          <p>每篇解說先交代研究問題，再讀方法、實驗與限制。主張附原文頁碼；來源不夠時明說，不用排序分數替論文下評語。</p>
-          <p>它不在背景自行計時搜尋。只有你要求 Discover 時才同步；新結果會與上次成功同步比對，過往紀錄仍保留。</p>
-        </div>
-      </div>
-    </section>
+    <section class="section" id="approach"><div class="container split-section">
+      <h2>More than a paper list</h2>
+      <div class="section-copy"><p>A useful briefing explains the question, the proposed method, the evidence behind the results, and what the experiments do not establish. Claims can be traced back to their sources; a ranking score is not a quality verdict.</p><p>Discovery is manual. Nothing searches on a timer. A new run compares the current scope with previous results and keeps earlier runs available.</p></div>
+    </div></section>
 
-    <section class="section section-tinted">
-      <div class="container">
-        <h2>四個使用動作</h2>
-        <ol class="action-list">
-          <li><span class="step-number">01</span><div><h3>Setup</h3><p>建立工作區，檢查環境，產生可編輯的設定檔。</p></div></li>
-          <li><span class="step-number">02</span><div><h3>Config</h3><p>用自然語言描述研究範圍；Agent 驗證並套用規則。</p></div></li>
-          <li><span class="step-number">03</span><div><h3>Discover</h3><p>你要求時才同步，並展示新增論文與篩選理由。</p></div></li>
-          <li><span class="step-number">04</span><div><h3>Briefing</h3><p>核對原文後，產生可互動的解說與簡報。</p></div></li>
-        </ol>
-        <p class="section-note">底層 Build、Sync、Rank、Brief、Review、Render 保留各階段紀錄，供 Agent 除錯；研究者不必逐段操作。</p>
-      </div>
-    </section>
+    <section class="section section-tinted"><div class="container">
+      <h2>Four actions</h2>
+      <ol class="action-list">
+        <li><span class="step-number">01</span><div><h3>Setup</h3><p>Install the harness and initialize a research workspace.</p></div></li>
+        <li><span class="step-number">02</span><div><h3>Config</h3><p>Describe a topic, author, venue, or paper; review the proposed settings.</p></div></li>
+        <li><span class="step-number">03</span><div><h3>Discover</h3><p>Search on request, compare runs, and choose papers to explain.</p></div></li>
+        <li><span class="step-number">04</span><div><h3>Briefing</h3><p>Verify source material and publish a per-paper explanation.</p></div></li>
+      </ol>
+      <p class="section-note">The agent drives the internal Build, Sync, Rank, Brief, Review, and Render stages. Each stage leaves inspectable files.</p>
+    </div></section>
 
-    <section class="section">
-      <div class="container split-section">
-        <h2>閱讀與報告</h2>
-        <div class="section-copy">
-          <div class="output-row"><h3>互動 HTML</h3><p>按研究問題切換段落，展開證據，查看論文圖與 PDF 原頁。</p></div>
-          <div class="output-row"><h3>OpenSlide</h3><p>保留可編輯的投影片原始專案；建置後可在瀏覽器展示。</p></div>
-          <div class="output-row"><h3>影片預覽</h3><p>可選功能；需另外啟用旁白服務。本次 AutoSci 範例只驗收 HTML 與 slides。</p></div>
-        </div>
+    <section class="section"><div class="container split-section">
+      <h2>Read or present</h2>
+      <div class="section-copy">
+        <div class="output-row"><h3>Interactive HTML</h3><p>Move between the question, method, results, and limitations; open supporting evidence and paper pages.</p></div>
+        <div class="output-row"><h3>OpenSlide</h3><p>Keep an editable slide project that can be built and presented in a browser.</p></div>
+        <div class="output-row"><h3>Narrated preview</h3><p>Optional HyperFrames output when video and voice dependencies are configured. A preview is not an exported MP4.</p></div>
       </div>
-    </section>
+    </div></section>
 
-    <section class="closing">
-      <div class="container">
-        <h2>先跑 AutoSci 範例</h2>
-        <p>四句簡短指令，從一篇 arXiv 論文開始。範例也記下目前不能自動完成的查核工作。</p>
-        <div class="actions"><a class="button-primary" href="quick-start.html">閱讀使用文件 <span aria-hidden="true">↗</span></a><a class="plain-link" href="example.html">AutoSci 範例 <span aria-hidden="true">→</span></a></div>
-      </div>
-    </section>
+    <section class="closing"><div class="container">
+      <h2>Start in your own workspace</h2>
+      <p>Install an Agent Skill, create an active configuration, and run Discovery when you want to look for changes.</p>
+      <div class="actions"><a class="button-primary" href="quick-start.html">Quick Start <span aria-hidden="true">↗</span></a><a class="plain-link" href="configuration.html">Configuration reference <span aria-hidden="true">→</span></a></div>
+    </div></section>
   </main>
 
-  <footer class="site-footer"><div class="container footer-inner"><span>FrontierOps</span><div><a href="guide.html">使用文件</a><a href="system-spec.md">系統規格</a><a href="https://github.com/Yuankai619/FrontierOps">原始碼</a></div></div></footer>
+  <footer class="site-footer"><div class="container footer-inner"><span>FrontierOps</span><div><a href="guide.html">Documentation</a><a href="system-spec.md">System spec</a><a href="https://github.com/Yuankai619/FrontierOps">Source code</a></div></div></footer>
 </body>
 </html>

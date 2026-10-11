@@ -1,9 +1,0 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AutoSci 範例 — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
-<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
-<main class="container doc-page"><h1>AutoSci 範例</h1><p class="lead">這是一段研究者與 Agent 的對話，不是給 Agent 的長篇驗收腳本。論文是 <a href="https://arxiv.org/abs/2605.31468">AutoSci</a>，目前仍為 arXiv 預印本。</p>
-<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html">Quick Start</a><a href="steps.html">四個使用步驟</a><a href="example.html" aria-current="page">AutoSci 範例</a><a href="configuration.html">frontier.yaml</a><a href="commands.html">指令參考</a><a href="outputs.html">輸出與紀錄</a></nav><article class="docs-main">
-<section><h2>1. 建立工作區</h2><blockquote><p>setup</p></blockquote><p>Agent 回報：已建立 <code>frontier.yaml</code>，來源尚未啟用。若你不在預期的研究目錄，Agent 先問「要用哪個資料夾？」。</p></section>
-<section><h2>2. 指定論文</h2><blockquote><p>config https://arxiv.org/pdf/2605.31468</p></blockquote><p>Agent 取得 PDF，確認標題、作者、機構與日期，寫入本地庫與 sidecar；顯示設定差異後套用。若要改需求，也可補一句：「只做 HTML 和 slide，不做影片，先不要 citation 門檻」。</p></section>
-<section><h2>3. 查看新論文</h2><blockquote><p>discover</p></blockquote><p>Agent 報告首次 Sync 新增 1 篇，提供本機 Discover 頁。你在頁面勾選 AutoSci 並按「儲存選取」。再次 Discover 會報新增 0 篇，不會把它說成新論文。</p></section>
-<section><h2>4. 產生解說</h2><blockquote><p>briefing</p></blockquote><p>Agent 讀取剛才選取的 AutoSci，核對論文圖、方法與案例結果。如果你想調整，可以直接說「加強 SciFlow 和 SciDAG 的機制，結果要交代評估限制」。</p><p>原始 deterministic 草稿可能抓到附錄句子；Review 只能檢查來源 ID、數字與精確引句等，無法保證語意正確。Agent 必須實際看原文。<a href="examples/autosci.md">完整實跑紀錄</a>列出每步輸入、輸出與已知問題。</p></section>
-</article></div></main></body></html>
