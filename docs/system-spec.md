@@ -37,6 +37,7 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 ## Persistence and policy
 
 - `.frontier/runs/` is append-only; `.frontier/state/` holds cursors; `.frontier/cache/raw/` holds immutable source snapshots.
+- JSON/JSONL artifacts are inspectable sources of truth; SQLite is a rebuildable query index.
 - Failed Sync runs remain inspectable but never advance the last-successful cursor.
 - `frontier.yaml` owns domain policy; unknown fields fail and secrets are only environment references.
 - Gates pass, exclude, warn, or exempt candidates; scores only order eligible candidates.
@@ -53,5 +54,6 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 
 - Python 3.12 and `uv` are required; `uv.lock` and `uv sync --locked` make installs reproducible.
 - `frontier build --config <path>` creates standard stage output and a `RunManifest`.
+- Build initializes state files and SQLite idempotently without overwriting prior state.
 - Unit and integration tests run through `uv run --locked`.
 - Repeated Build runs are independent, and unknown configuration fields fail visibly.
