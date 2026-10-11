@@ -42,8 +42,12 @@ class RenderServiceTests(unittest.TestCase):
         document = output.documents["html"]
         self.assertIn("Paper &lt;Two&gt;", document)
         self.assertIn("101 papers &amp; videos", document)
-        self.assertIn("page 2", document)
+        self.assertIn("p. 2", document)
         self.assertIn("a=1&amp;b=2", document)
+        self.assertIn('role="tablist"', document)
+        self.assertIn('role="tabpanel"', document)
+        self.assertIn("查核證據", document)
+        self.assertNotIn('class="kicker"', document)
         metadata = re.search(
             r'<script id="frontierops-claims" type="application/json">(.*?)</script>',
             document,
@@ -52,6 +56,14 @@ class RenderServiceTests(unittest.TestCase):
         self.assertEqual(json.loads(metadata.group(1))["claim_fingerprints"],
                          claim_fingerprints(spec))
         self.assertEqual(output.missing_targets, ["slides", "video"])
+
+    def test_html_connects_figure_to_original_pdf_page(self) -> None:
+        visual = {"paper-1": {"uri": "visuals/figure.png", "source_uri": "assets/paper.pdf",
+                              "page": 2, "label": "Figure 1", "caption": "Architecture"}}
+        document = StaticHtmlRenderer(visual).render(briefing(), [evidence()])
+        self.assertIn('src="visuals/figure.png"', document)
+        self.assertIn('href="assets/paper.pdf#page=2"', document)
+        self.assertIn("Figure 1 · p. 2 Architecture", document)
 
     def test_slide_deck_uses_the_same_claim_fingerprints(self) -> None:
         spec = briefing()
