@@ -78,6 +78,8 @@
 - Unit／integration tests 必須透過 `uv run --locked` 執行；未知設定欄位需明確失敗。
 - Sync 只能由使用者觸發，保存 raw snapshots，並以 stable source ID 與內容雜湊做 delta comparison。
 - Live arXiv 保存 base ID 與 version；Semantic Scholar 使用 stable author ID 與分頁 author-paper response。
+- OpenAlex 的 live topic search 由 `profile.topics[].search` 定義穩定主題 ID、查詢字串與發表日期區間；`sources.openalex` 控制分頁、上限與可選 API key 環境變數。來源回應的 `cited_by_count` 映射到既有 citation gate，倒排摘要重建為 abstract；達到 `max_results` 但仍有下一頁時須標記截斷，不能宣稱已找到全量論文。
+- alphaXiv MCP 用於補充搜尋及閱讀候選論文，不以其每次少量的 `discover_papers` 結果作為全量增量基準。兩種來源的主題與日期條件由同一份設定控制，API key／OAuth token 不寫入 Run artifact。
 - Local library root 預設限制在 project 內；PDF Evidence 保存 page／bbox，文字 Evidence 保存 line locator。
 - OpenReview 使用官方 API v2 client，保存 forum、invitation、reply 與 decision provenance；認證只存在環境。
 - Rank 輸出 Evidence、合格／排除候選與可重現 ranking report；factual explanation 必須引用 abstract 或 page-level Evidence。

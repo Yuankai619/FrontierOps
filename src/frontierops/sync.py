@@ -6,6 +6,8 @@ from frontierops.adapters.build import SystemClock
 from frontierops.adapters.config import YamlConfigAdapter
 from frontierops.adapters.sync import FileSyncRepository, JsonFixtureProvider
 from frontierops.adapters.providers import ArxivProvider, SemanticScholarProvider, UrlLibHttpClient
+from frontierops.adapters.openalex import OpenAlexProvider
+from frontierops.adapters.alphaxiv import AlphaXivProvider
 from frontierops.adapters.local_library import LocalLibraryProvider, ParserRouter
 from frontierops.adapters.openreview import OpenReviewProvider, authenticated_client
 from frontierops.application.sync import SyncUseCase
@@ -40,6 +42,28 @@ def run_sync(config_path: Path) -> Path:
                 if identity
             ]
             providers[name] = SemanticScholarProvider(settings, author_ids, http)
+    openalex = config.sources.openalex
+    if openalex.enabled:
+        if openalex.mode == "fixture":
+            if openalex.fixture_path is None:
+                raise ValueError("openalex fixture mode requires fixture_path")
+            path = openalex.fixture_path
+            providers["openalex"] = JsonFixtureProvider(
+                "openalex", path if path.is_absolute() else config_path.resolve().parent / path
+            )
+        else:
+            providers["openalex"] = OpenAlexProvider(openalex, config.profile.topics, http)
+    alphaxiv = config.sources.alphaxiv
+    if alphaxiv.enabled:
+        if alphaxiv.mode == "fixture":
+            if alphaxiv.fixture_path is None:
+                raise ValueError("alphaxiv fixture mode requires fixture_path")
+            path = alphaxiv.fixture_path
+            providers["alphaxiv"] = JsonFixtureProvider(
+                "alphaxiv", path if path.is_absolute() else config_path.resolve().parent / path
+            )
+        else:
+            providers["alphaxiv"] = AlphaXivProvider(alphaxiv, config.profile.topics)
     local = config.sources.local_library
     if local.enabled:
         providers["local_library"] = LocalLibraryProvider(

@@ -37,6 +37,17 @@ rendering:
 <tr><td><code>review</code></td><td>控制缺證據、無來源數字、重複等是否阻擋；不能語意判斷主張是否真的受原文支持。</td></tr>
 <tr><td><code>rendering.video</code></td><td>預設關閉；開啟前需備旁白服務並同意可能的費用。這次 AutoSci 不測影片。</td></tr>
 </tbody></table></section>
+<section><h2>持續追蹤研究主題</h2><pre><code>sources:
+  openalex: {enabled: true, mode: live, max_results: 200}
+profile:
+  topics:
+    - id: ai-agent-harness
+      description: AI agent harness and execution environments
+      search:
+        providers: [openalex]
+        query: '"AI agent" AND harness'
+        published_from: 2025-01-01
+        published_to: 2025-12-31</code></pre><p>下次調整年份時保留相同主題 ID。<code>max_results</code> 是每個主題的上限；若結果截斷，不可聲稱已完整找出新增論文。alphaXiv 另需啟用 <code>sources.alphaxiv</code>，並在 <code>search.keywords</code> 設定 3–4 個詞。API key 只放環境變數，不放 YAML。</p></section>
 <section><h2>Gate 和權重</h2><p>Gate 先回答「能不能進候選清單？」權重再決定入選後的排列。新預印本往往沒有 citation count，不應套固定最低引用數；可以用 <code>on_fail: warn</code> 或新論文豁免。</p><pre><code>ranking:
   gates:
     - id: citations

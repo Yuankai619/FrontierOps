@@ -52,3 +52,16 @@ class ConfigServiceTests(unittest.TestCase):
         }
         with self.assertRaisesRegex(ValidationError, "heygen_tts_script"):
             self.service.inspect(Path("bad-video"))
+
+    def test_topic_search_rejects_reversed_window_and_missing_alphaxiv_terms(self) -> None:
+        self.adapter.documents["bad-topic"] = {
+            "project": {"id": "demo", "name": "Demo"},
+            "sources": {"alphaxiv": {"enabled": True, "mode": "live"}},
+            "profile": {"topics": [{"id": "agents", "description": "agents", "search": {
+                "providers": ["alphaxiv"], "query": "agent harness",
+                "published_from": "2026-01-01", "published_to": "2025-12-31",
+                "keywords": ["agent harness"],
+            }}]},
+        }
+        with self.assertRaises(ValidationError):
+            self.service.inspect(Path("bad-topic"))
