@@ -31,7 +31,7 @@ class OpenSlideRenderer:
             f"<footer>{'{' + _js(_cover_source(briefing)) + '}'}</footer></div>;"
         ]
         names = ["Cover"]
-        notes = [briefing.title]
+        notes = [f"Introduce the paper and its publication status: {briefing.title}."]
         for number, section in enumerate(briefing.sections, 1):
             figure = self.visuals.get(section.id)
             figure_name = f"figure{number}"
@@ -40,14 +40,16 @@ class OpenSlideRenderer:
             section_pages, section_names = _paper_pages(number, section, by_id, figure, figure_name)
             pages.extend(section_pages)
             names.extend(section_names)
-            notes.extend([section.narration_script] * len(section_pages))
+            notes.extend(_paper_notes(section, bool(figure or section.source_excerpts)))
         metadata = json.dumps({
             "briefing_id": briefing.artifact_id,
             "claim_fingerprints": claim_fingerprints(briefing),
         }, ensure_ascii=False)
         return "\n".join([
             *imports, "", f"export const frontieropsClaims = {metadata};", _CSS,
-            *pages, "", f"export const meta: SlideMeta = {{ title: {_js(briefing.title)} }};",
+            *pages, "", ("export const meta: SlideMeta = { "
+                         f"title: {_js(briefing.title)}, "
+                         f"createdAt: {_js(briefing.created_at.isoformat().replace('+00:00', 'Z'))} }};"),
             f"export const notes = {json.dumps(notes, ensure_ascii=False)};",
             f"export default [{', '.join(names)}] satisfies Page[];", "",
         ])
@@ -88,8 +90,8 @@ def _cover_source(briefing: BriefingSpec) -> str:
     if not briefing.sections:
         return ""
     meta = briefing.sections[0].paper_metadata
-    return " · ".join(value for value in (meta.publication_venue or _publication(meta),
-                                           f"arXiv:{meta.arxiv_id}" if meta.arxiv_id else "") if value)
+    return (f"arXiv:{meta.arxiv_id}" if meta.arxiv_id else
+            meta.publication_venue or _publication(meta))
 
 
 def _publication(meta) -> str:
@@ -122,12 +124,15 @@ def _paper_pages(number, section, evidence, figure, figure_name) -> tuple[list[s
         f'<figcaption>{{{_js(str(figure["label"]) + " · p. " + str(figure["page"]))}}}</figcaption></figure>'
         if figure else _excerpt_markup(section, evidence)
     )
+    has_visual = bool(figure or section.source_excerpts)
     method_page = (f"const {prefix}Method: Page = () => <div className=\"fo-slide method\"><style>{{css}}</style>"
-                   f"<h2>Proposed system</h2>{figure_markup}"
-                   f"<div className=\"method-points\">"
-                   f"{_statement(method, 'method-text') if method else ''}"
-                   f"{_statement(novelty, 'novelty') if novelty else ''}</div>"
+                   f"<h2>Proposed system</h2>{figure_markup if has_visual else ''}"
+                   f"{_statement(method, 'method-text' if has_visual else 'main') if method and not novelty else ''}"
                    f"<footer>{'{' + _js(_figure_source(figure, section.headline)) + '}'}</footer></div>;")
+    mechanism_page = (f"const {prefix}Mechanism: Page = () => <div className=\"fo-slide mechanism\"><style>{{css}}</style>"
+                      f"<h2>How the harness works</h2>{_statement(method, 'main') if method else ''}"
+                      f"{_statement(novelty, 'main') if novelty else ''}"
+                      f"<footer>{'{' + _js(_source_line(novelty, evidence)) + '}'}</footer></div>;")
     result_page = (f"const {prefix}Results: Page = () => <div className=\"fo-slide results\"><style>{{css}}</style>"
                    f"<h2>Evaluation</h2>"
                    f"<div className=\"result-body\">{_statement(results, 'finding') if results else ''}</div>"
@@ -135,8 +140,28 @@ def _paper_pages(number, section, evidence, figure, figure_name) -> tuple[list[s
     limits_page = (f"const {prefix}Limits: Page = () => <div className=\"fo-slide limits\"><style>{{css}}</style>"
                    f"<h2>Limits and open questions</h2>{_statement(limits, 'main') if limits else ''}"
                    f"<footer>{'{' + _js(_source_line(limits, evidence) if limits else section.headline) + '}'}</footer></div>;")
-    return ([overview, context, method_page, result_page, limits_page],
-            [prefix + name for name in ("Overview", "Context", "Method", "Results", "Limits")])
+    pages = [overview, context]
+    names = [prefix + name for name in ("Overview", "Context")]
+    if has_visual or not novelty:
+        pages.append(method_page)
+        names.append(prefix + "Method")
+    if novelty:
+        pages.append(mechanism_page)
+        names.append(prefix + "Mechanism")
+    return (pages + [result_page, limits_page], names + [prefix + "Results", prefix + "Limits"])
+
+
+def _paper_notes(section, has_visual: bool) -> list[str]:
+    claims = section.claims
+    note = lambda index: claims[index].text if index < len(claims) else ""
+    notes = [f"Summarize the contribution and why it matters. {note(1)} {note(6)}",
+             f"Explain the gap in earlier work. {note(0)}"]
+    if has_visual or len(claims) <= 3:
+        notes.append(f"Walk through the source figure or method. {note(2)}")
+    if len(claims) > 3:
+        notes.append(f"Explain the execution contract and handoffs. {note(3)}")
+    return notes + [f"State what was measured and what was not. {note(4)}",
+                    f"Separate study limitations from open questions. {note(5)}"]
 
 
 def _excerpt_markup(section, evidence: dict[str, Evidence]) -> str:
@@ -174,7 +199,7 @@ _CSS = """const css = `
 .fo-slide p{margin:0}.fo-slide footer{position:absolute;bottom:45px;left:118px;right:118px;border-top:1px solid #aaa;padding-top:12px;font-size:20px;color:#555}
 .cover{display:flex;flex-direction:column;justify-content:center}.cover p{font-size:31px;white-space:pre-line;line-height:1.45;max-width:1450px}
 .overview-body{display:grid;grid-template-columns:1fr 1fr;gap:70px;margin-top:90px}.overview h3{font-size:27px;margin:0 0 15px;border-top:2px solid #111;padding-top:17px}.summary-line{font:36px/1.38 Georgia,serif}
-.context .main,.limits .main{font:47px/1.35 Georgia,serif;max-width:1450px;margin-top:100px}.method figure{margin:0;max-width:1670px}.method img{display:block;width:100%;max-height:540px;object-fit:contain}.method figcaption{font-size:20px;color:#555;margin-top:7px}
-.method-points{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:30px;font-size:27px;line-height:1.3}.source-quote{font:36px/1.4 Georgia,serif;margin:50px 0;max-width:1500px}.source-quote mark{background:#ffed9c}.source-quote cite{display:block;font:21px Arial,sans-serif;margin-top:20px}
+.context .main,.method .main,.limits .main{font:47px/1.35 Georgia,serif;max-width:1450px;margin-top:100px}.method{padding-top:65px}.method h2{margin-bottom:20px}.method figure{margin:0;max-width:1670px}.method img{display:block;width:100%;max-height:760px;object-fit:contain}.method figcaption{font-size:20px;color:#555;margin-top:7px}.method-text{font:27px/1.3 Arial,sans-serif;margin-top:18px}
+.mechanism .main{font:40px/1.35 Georgia,serif;max-width:1480px;margin-top:52px}.source-quote{font:36px/1.4 Georgia,serif;margin:50px 0;max-width:1500px}.source-quote mark{background:#ffed9c}.source-quote cite{display:block;font:21px Arial,sans-serif;margin-top:20px}
 .no-figure{font-size:30px;color:#555}.result-body{font:48px/1.35 Georgia,serif;max-width:1470px;margin-top:90px}
 `;"""

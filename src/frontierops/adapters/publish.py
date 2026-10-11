@@ -94,9 +94,9 @@ def _landing(outputs: Mapping[str, str], papers: Sequence[Mapping[str, str]]) ->
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>FrontierOps 研究簡報</title>'
             '<style>body{max-width:760px;margin:7vh auto;padding:0 25px;'
-            'background:#f8f7f2;color:#182723;font:18px/1.7 system-ui}'
-            'h1{font:700 44px Georgia,serif}li{padding:14px 0;border-top:1px solid #ccd4cc}'
-            'a{color:#1d5b50}code{font-size:.82em}</style>'
+            'background:#fff;color:#161616;font:18px/1.7 system-ui}'
+            'h1{font:700 44px Georgia,serif}li{padding:14px 0;border-top:1px solid #bbb}'
+            'a{color:inherit}code{font-size:.82em}</style>'
             '<h1>研究簡報成果</h1><p>此目錄只放閱讀與展示所需成果；'
             '內部證據、篩選紀錄與版本留在 Run 中。</p><ul>'
             + content + '</ul><p><a href="manifest.json">查看成果清單</a></p></html>')

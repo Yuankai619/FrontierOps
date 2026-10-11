@@ -65,7 +65,7 @@
 - Render 會把可閱讀的 HTML、OpenSlide 專案與可用的 HyperFrames 預覽發布到 `project.output_dir/briefings/<run-id>/`，另附 `index.html` 與 `manifest.json`；公開目錄不含 Sync raw cache。每篇選中論文另有 `papers/paper-N/html/` 與 `papers/paper-N/slides/` 的獨立成果，manifest 逐篇列出路徑；根目錄綜合版暫供舊流程相容。重跑同一 Run 會建立帶序號的新目錄，不覆蓋既有成果。影片預覽目前仍為 Run 層級，尚未逐篇拆分；最終 MP4 與 preview 明確區分。
 - HTML adapter 是逐篇論文的互動閱讀介面：研究問題分頁、Evidence 展開、原文頁碼連結、可放大的論文圖。使用者應能先理解論文，再查核原文；不能只列靜態摘要卡。
 - Render 從已引用的本地 PDF 擷取附有 caption 與頁碼的原圖，記入 `assets-manifest.json.visuals`。向上裁切範圍須涵蓋 caption 前的整張向量／影像圖，而非固定高度的圖尾；找不到可驗證圖片時明示缺少素材，不生成貌似原圖的裝飾圖；圖像抽取失敗不得影響文字簡報。
-- Slides adapter 從同一份 `BriefingSpec` 與原圖素材產生 OpenSlide v2 的 React `Page[]` 專案，位於 `05-render/open-slide/`。頁面以論文問題、方法原圖、結果與限制組織；每頁只有一個主訊息，原圖必須標明 Figure 與頁碼。輸出 `index.tsx` 是可編輯 deck source；執行專案內 `npm run build` 才得到 `dist/` 靜態展示站，PDF 由 OpenSlide 工具列匯出。
+- Slides adapter 從同一份 `BriefingSpec` 與原圖素材產生 OpenSlide v2 的 React `Page[]` 專案，位於 `05-render/open-slide/`。頁面以論文問題、方法原圖、機制、結果與限制組織；密集的原圖與機制文字分頁，原圖標明 Figure 與頁碼。逐頁 notes 不重複整段旁白。輸出 `index.tsx` 是可編輯 deck source；執行專案內 `npm run build` 才得到 `dist/` 靜態展示站，PDF 由 OpenSlide 工具列匯出。
 - Video preview adapter 透過外部 HeyGen TTS tool 取得 WAV 與原生 word timestamps；FrontierOps 不重作 TTS client，也不保存憑證。
 - HyperFrames project 使用三段論文導向的 scene sub-compositions（問題／方法原圖／結果）、有頁碼的原圖、受控的進度與內容動態、獨立音軌與 timed captions；禁止重複卡片格、標題上方小標、全大寫裝飾字與無關的 pill。找不到原圖時需明示，不能生成貌似論文證據的假圖。同一 Run 重跑會重用既有旁白。
 - `video_preview` 只代表可審核 composition。未經 preview 核准前，`missing_targets` 必須保留 `video`，Run 不得宣告完整成功。
