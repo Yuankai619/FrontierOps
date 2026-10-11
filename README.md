@@ -210,6 +210,8 @@ rendering:
 
 `frontier render` 會在 `05-render/hyperframes/` 產生 `index.html`、scene sub-compositions、`narration.wav` 與 `narration.words.json`。同一 Run 重跑時會重用既有旁白，避免重複呼叫 HeyGen。憑證由 HeyGen CLI 的 credential store 或環境變數提供，不會寫進 config 或 Run artifacts。
 
+影片畫面以論文的問題、方法原圖、結果與限制為主，不使用重複的卡片模板。先在 `05-render/hyperframes/` 執行 `npx hyperframes check`，再執行 `npx hyperframes preview --background` 人工檢查場景與字幕；未經核准不輸出最終 MP4。場景動態使用固定版 GSAP CDN；如在隔離／離線環境中預覽，需先提供該依賴。
+
 ## Config lifecycle
 
 以下介面供使用者及 [`frontier-config` Skill](skills/frontier-config/SKILL.md) 建立安全的設定變更：

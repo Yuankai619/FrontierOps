@@ -48,7 +48,7 @@ def run_render(run_dir: Path) -> Path:
             target = run_dir / "05-render/open-slide/assets" / source.name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(source, target)
-    preview_path = _prepare_video_preview(config, briefing, run_dir, resolution)
+    preview_path = _prepare_video_preview(config, briefing, evidence, visuals, run_dir, resolution)
     status = "partial" if output.missing_targets else "success"
     render_result = {
         "schema_version": "0.1", "briefing_id": briefing.artifact_id,
@@ -86,7 +86,8 @@ def run_render(run_dir: Path) -> Path:
 
 
 def _prepare_video_preview(
-    config: FrontierConfig, briefing: BriefingSpec, run_dir: Path, resolution: dict
+    config: FrontierConfig, briefing: BriefingSpec, evidence: list[Evidence],
+    visuals: dict[str, dict], run_dir: Path, resolution: dict,
 ) -> str | None:
     settings = config.rendering.video
     if not settings.enabled or "video" not in briefing.render_targets:
@@ -103,10 +104,15 @@ def _prepare_video_preview(
     narration = HeyGenNarrator(adapter.resolve(), settings.voice_id).synthesize(
         script, project, language
     )
-    documents = HyperFramesPreviewRenderer().render(
-        briefing, narration, settings.width, settings.height
+    documents = HyperFramesPreviewRenderer(visuals).render(
+        briefing, narration, settings.width, settings.height, evidence
     )
     store = FileArtifactStore(run_dir)
     for relative_path, document in documents.items():
         store.write_text(Path("05-render/hyperframes") / relative_path, document)
+    for visual in visuals.values():
+        source = run_dir / "05-render" / str(visual["uri"])
+        target = project / "assets" / source.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
     return "05-render/hyperframes/index.html"
