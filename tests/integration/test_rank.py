@@ -41,3 +41,9 @@ ranking:
             report = json.loads((second / "02-rank/ranking-report.json").read_text())
             self.assertEqual(report["counts"]["eligible"], 1)
             self.assertEqual(report["ranking"][0]["eligible"], True)
+            explanations = [json.loads(line) for line in
+                            (second / "02-rank/paper-explanations.jsonl").read_text().splitlines()]
+            self.assertEqual(explanations[0]["title"], "Paper2Video research presentation")
+            for section in explanations[0]["paper_explanation"].values():
+                if isinstance(section, dict) and section["kind"] == "factual":
+                    self.assertTrue(section["evidence_ids"])

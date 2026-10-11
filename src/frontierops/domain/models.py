@@ -130,6 +130,8 @@ class RankingConfig(StrictModel):
     citation_scale: int = Field(default=100, gt=0)
     freshness_half_life_days: int = Field(default=180, gt=0)
     source_reliability: dict[str, float] = Field(default_factory=dict)
+    deep_enrich_top_k: int = Field(default=5, gt=0)
+    max_fulltext_pages: int = Field(default=20, gt=0)
 
 
 class BriefConfig(StrictModel):
@@ -247,6 +249,29 @@ class Evidence(Artifact):
     evidence_tier: str
 
 
+class GroundedStatement(StrictModel):
+    text: str
+    kind: Literal["factual", "interpretation"] = "factual"
+    evidence_ids: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def factual_statement_has_evidence(self) -> "GroundedStatement":
+        if self.kind == "factual" and not self.evidence_ids:
+            raise ValueError("factual statement requires evidence_ids")
+        return self
+
+
+class PaperExplanation(StrictModel):
+    problem: GroundedStatement
+    core_idea: GroundedStatement
+    method: GroundedStatement
+    novelty: GroundedStatement
+    experiments: GroundedStatement
+    limitations: GroundedStatement
+    why_it_matters: GroundedStatement
+    resources: list[str] = Field(default_factory=list)
+
+
 class GateDecision(StrictModel):
     gate: str
     result: Literal["pass", "exclude", "warn", "exempt"]
@@ -261,6 +286,7 @@ class BriefingCandidate(Artifact):
     features: dict[str, float]
     gate_trace: list[GateDecision]
     total_score: float
+    paper_explanation: PaperExplanation | None = None
 
 
 class ResearchDevelopment(Artifact):

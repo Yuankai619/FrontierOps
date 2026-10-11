@@ -6,6 +6,7 @@ from pathlib import Path
 from frontierops.adapters.config import YamlConfigAdapter
 from frontierops.adapters.storage import FileArtifactStore
 from frontierops.application.rank import RankService
+from frontierops.application.explain import ExplanationService
 from frontierops.domain.models import FrontierConfig, ResearchSignal, StageResult
 
 
@@ -20,15 +21,26 @@ def run_rank(run_dir: Path) -> Path:
     ]
     started = datetime.now(timezone.utc)
     output = RankService().execute(config, signals, started)
-    store.write_jsonl(Path("02-rank/evidence.jsonl"), [item.model_dump(mode="json") for item in output.evidence])
-    store.write_jsonl(Path("02-rank/briefing-candidates.jsonl"), [item.model_dump(mode="json") for item in output.candidates])
-    store.write_jsonl(Path("02-rank/excluded-candidates.jsonl"), [item.model_dump(mode="json") for item in output.excluded])
+    explanations = ExplanationService().execute(
+        output.candidates, signals, output.evidence, started,
+        config.ranking.deep_enrich_top_k, config.ranking.max_fulltext_pages,
+    )
+    evidence = output.evidence + explanations.evidence
+    candidate_by_id = {item.artifact_id: item for item in explanations.candidates}
+    excluded = [candidate_by_id[item.artifact_id] for item in output.excluded]
+    store.write_jsonl(Path("02-rank/evidence.jsonl"), [item.model_dump(mode="json") for item in evidence])
+    store.write_jsonl(Path("02-rank/briefing-candidates.jsonl"), [item.model_dump(mode="json") for item in explanations.candidates])
+    store.write_jsonl(Path("02-rank/excluded-candidates.jsonl"), [item.model_dump(mode="json") for item in excluded])
+    store.write_jsonl(Path("02-rank/paper-explanations.jsonl"), explanations.explanations)
+    output.report["counts"]["explained"] = len(explanations.explanations)
     store.write_json(Path("02-rank/ranking-report.json"), output.report)
     result = StageResult(
         run_id=run_dir.name, stage="rank", status="success", started_at=started,
         finished_at=datetime.now(timezone.utc), input_refs=["01-sync/research-signals.jsonl"],
         outputs={"candidates": "02-rank/briefing-candidates.jsonl",
-                 "evidence": "02-rank/evidence.jsonl", "report": "02-rank/ranking-report.json"},
+                 "evidence": "02-rank/evidence.jsonl",
+                 "explanations": "02-rank/paper-explanations.jsonl",
+                 "report": "02-rank/ranking-report.json"},
         counts=output.report["counts"], next_stage_allowed=True,
     )
     store.write_json(Path("02-rank/stage-result.json"), result.model_dump(mode="json"))
