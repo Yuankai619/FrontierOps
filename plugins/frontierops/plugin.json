@@ -3,6 +3,18 @@
   "name": "frontierops",
   "version": "0.1.0",
   "description": "Research discovery and evidence-grounded briefing skills",
-  "skills": "./skills/",
-  "extensions": {"com.openai": {"onboardingSkill": "./skills/frontier-setup/SKILL.md"}}
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/frontier-setup/SKILL.md",
+      "interface": {
+        "displayName": "FrontierOps",
+        "shortDescription": "Discover and explain new research with traceable evidence.",
+        "longDescription": "Set up a research workspace, configure subscriptions in natural language, inspect new papers, and produce reviewed briefings.",
+        "developerName": "FrontierOps contributors",
+        "category": "Productivity",
+        "capabilities": [],
+        "defaultPrompt": "Set up FrontierOps in my research workspace."
+      }
+    }
+  }
 }
