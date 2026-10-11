@@ -47,6 +47,7 @@ class RenderServiceTests(unittest.TestCase):
         self.assertIn('role="tablist"', document)
         self.assertIn('role="tabpanel"', document)
         self.assertIn("查核證據", document)
+        self.assertEqual(document.count('<h2 class="paper-title">'), 1)
         self.assertNotIn('class="kicker"', document)
         metadata = re.search(
             r'<script id="frontierops-claims" type="application/json">(.*?)</script>',
@@ -64,6 +65,12 @@ class RenderServiceTests(unittest.TestCase):
         self.assertIn('src="visuals/figure.png"', document)
         self.assertIn('href="assets/paper.pdf#page=2"', document)
         self.assertIn("Figure 1 · p. 2 Architecture", document)
+
+    def test_single_paper_title_is_not_repeated(self) -> None:
+        spec = briefing()
+        spec.title = spec.sections[0].headline
+        document = StaticHtmlRenderer().render(spec, [evidence()])
+        self.assertEqual(document.count('<h2 class="paper-title">'), 0)
 
     def test_slide_deck_uses_the_same_claim_fingerprints(self) -> None:
         spec = briefing()
@@ -86,6 +93,22 @@ class RenderServiceTests(unittest.TestCase):
         self.assertIn('<img src={figure1}', document)
         self.assertIn("Figure 1 · p. 2", document)
         self.assertIn("export const notes =", document)
+        self.assertNotIn("Paper1Mechanism", document)
+        notes = json.loads(re.search(r'export const notes = (\[.*\]);', document).group(1))
+        self.assertEqual(len(notes), 6)
+        self.assertNotEqual(notes[2], notes[3])
+
+    def test_full_paper_deck_separates_figure_and_mechanism(self) -> None:
+        spec = briefing()
+        spec.sections[0].claims = [spec.sections[0].claims[0].model_copy()
+                                   for _ in range(7)]
+        visual = {"paper-1": {"uri": "visuals/figure.png", "source_uri": "assets/paper.pdf",
+                              "page": 2, "label": "Figure 1", "caption": "Architecture"}}
+        document = OpenSlideRenderer(visual).render(spec, [evidence()])
+        self.assertIn("Paper1Mechanism", document)
+        self.assertEqual(document.count('<img src={figure1}'), 1)
+        notes = json.loads(re.search(r'export const notes = (\[.*\]);', document).group(1))
+        self.assertEqual(len(notes), 7)
 
     def test_bibliography_and_executive_summary_are_visible(self) -> None:
         spec = briefing()

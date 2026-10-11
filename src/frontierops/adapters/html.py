@@ -23,7 +23,9 @@ class StaticHtmlRenderer:
         by_id = {item.artifact_id: item for item in evidence}
         zh = briefing.language.lower().startswith("zh")
         labels = LABELS_ZH if zh else LABELS_EN
-        sections = "".join(_section(item, by_id, labels, self.visuals.get(item.id), zh)
+        sections = "".join(_section(item, by_id, labels, self.visuals.get(item.id), zh,
+                                    show_heading=(len(briefing.sections) > 1
+                                                  or briefing.title != item.headline))
                            for item in briefing.sections)
         metadata = json.dumps({"briefing_id": briefing.artifact_id,
                                "claim_fingerprints": claim_fingerprints(briefing)},
@@ -33,7 +35,7 @@ class StaticHtmlRenderer:
 <style>:root{{--ink:#161616;--muted:#555;--rule:#c6c6c6;--paper:#fff}}*{{box-sizing:border-box}}html{{scroll-behavior:smooth}}body{{margin:0;background:var(--paper);color:var(--ink);font:17px/1.6 system-ui,sans-serif}}
 .shell{{max-width:1370px;margin:auto;padding:0 48px}}a{{color:inherit;text-underline-offset:3px}}button{{font:inherit;cursor:pointer}}h1,h2{{font-family:Georgia,serif;line-height:1.14}}
 .masthead{{padding:56px 0 35px;border-bottom:2px solid var(--ink)}}.masthead h1{{font-size:clamp(40px,5vw,67px);max-width:1120px;margin:0}}.masthead p{{margin:14px 0 0;color:var(--muted)}}
-.paper{{padding:45px 0 95px;border-bottom:1px solid var(--rule)}}.paper-title{{font-size:36px;margin:0 0 18px}}.bib{{border-top:1px solid var(--rule);padding-top:14px;color:var(--muted);font-size:15px}}
+.paper{{padding:30px 0 95px;border-bottom:1px solid var(--rule)}}.paper-title{{font-size:36px;margin:0 0 18px}}.bib{{border-top:1px solid var(--rule);padding-top:14px;color:var(--muted);font-size:15px}}
 .bib span{{margin-right:16px}}.bib a{{color:var(--ink)}}.authors{{margin:9px 0 0}}.authors summary{{cursor:pointer}}.summary{{margin:45px 0 55px;border-top:2px solid var(--ink)}}.summary h3{{font:700 30px Georgia,serif;margin:20px 0}}
 .summary dl{{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:0 42px}}.summary dl div{{padding:17px 0;border-top:1px solid var(--rule)}}.summary dt{{font-weight:700;font-size:14px}}.summary dd{{margin:5px 0 0;max-width:600px}}
 .reader{{display:grid;grid-template-columns:220px minmax(0,1fr);gap:35px}}.outline{{position:sticky;top:16px;align-self:start;border-top:2px solid var(--ink)}}.step{{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--rule);background:#fff;padding:12px 8px}}
@@ -54,7 +56,8 @@ const dialog=document.getElementById('figure-dialog');document.querySelectorAll(
 </script></body></html>'''
 
 
-def _section(section, evidence: dict[str, Evidence], labels: list[str], visual: dict | None, zh: bool) -> str:
+def _section(section, evidence: dict[str, Evidence], labels: list[str], visual: dict | None,
+             zh: bool, show_heading: bool) -> str:
     claims = section.claims
     headings = SUMMARY_ZH if zh else SUMMARY_EN
     summary_claims = [claims[i].text if i < len(claims) else "" for i in (0, 1, 4, 5)]
@@ -65,8 +68,9 @@ def _section(section, evidence: dict[str, Evidence], labels: list[str], visual: 
     answers = "".join(_answer(section.id, i, claim, evidence, labels, zh)
                       for i, claim in enumerate(claims))
     figure = _visual(section, evidence, visual, zh)
+    heading = f'<h2 class="paper-title">{escape(section.headline)}</h2>' if show_heading else ''
     return (f'<section class="paper" id="{escape(section.id, quote=True)}">'
-            f'<h2 class="paper-title">{escape(section.headline)}</h2>{_bibliography(section.paper_metadata, zh)}'
+            f'{heading}{_bibliography(section.paper_metadata, zh)}'
             f'<div class="summary"><h3>{"重點摘要" if zh else "Executive summary"}</h3><dl>{summary}</dl></div>'
             f'<div class="reader"><nav class="outline" role="tablist" aria-label="Paper questions">{tabs}</nav>'
             f'<div class="content">{figure}<div class="explanation">{answers}</div></div></div></section>')
