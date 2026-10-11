@@ -5,6 +5,14 @@ project:
   timezone: Asia/Taipei
   language: zh-TW
   workspace_dir: .frontier
+profile:
+  topics:
+    - id: research-communication
+      description: automatic scientific paper explanation presentation slide and video generation
+      weight: 1.0
+  keywords:
+    include: [academic presentation, research paper, video generation, research agent]
+    exclude: []
 tracking:
   scholars:
     - id: fixture-ada
@@ -56,6 +64,19 @@ sync:
   trigger_mode: manual
   baseline: last_successful_sync
   default_lookback_days: 14
+ranking:
+  gates:
+    - {id: publication-window, type: publication_year, min_year: 2024, on_fail: exclude}
+    - {id: citation-policy, type: citation, minimum_count: 3, exempt_if_age_days_lte: 90, on_fail: exclude}
+    - {id: relevance-floor, type: relevance, minimum: 0.05, on_fail: exclude}
+  features:
+    lexical_relevance: {enabled: true, weight: 0.55}
+    citation: {enabled: true, weight: 0.15}
+    freshness: {enabled: true, weight: 0.15}
+    reliability: {enabled: true, weight: 0.15}
+  citation_scale: 100
+  freshness_half_life_days: 180
+  source_reliability: {arxiv: 0.8, semantic_scholar: 0.8, openreview: 0.9, local_library: 1.0}
 brief:
   target_duration_seconds: 300
   maximum_developments: 5

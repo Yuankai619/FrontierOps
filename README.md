@@ -181,6 +181,7 @@ frontier.yaml
 uv sync --locked
 uv run --locked frontier build --config frontier.yaml.example
 uv run --locked frontier sync --config frontier.yaml.example
+uv run --locked frontier rank --run <sync-run-path>
 ```
 
 第二個指令成功後會印出本次 Run 的完整路徑。
