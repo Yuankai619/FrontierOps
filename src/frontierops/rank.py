@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from frontierops.adapters.config import YamlConfigAdapter
+from frontierops.adapters.discovery_html import render_discovery
 from frontierops.adapters.storage import FileArtifactStore
 from frontierops.application.rank import RankService
 from frontierops.application.explain import ExplanationService
@@ -34,18 +35,30 @@ def run_rank(run_dir: Path) -> Path:
     store.write_jsonl(Path("02-rank/paper-explanations.jsonl"), explanations.explanations)
     output.report["counts"]["explained"] = len(explanations.explanations)
     store.write_json(Path("02-rank/ranking-report.json"), output.report)
+    discovery_html = render_discovery(explanations.candidates, output.report["weights"])
+    store.write_text(Path("02-rank/discovery.html"), discovery_html)
+    resolution = store.read_json(Path("00-build/config-resolution.json"))
+    public_root = config.project.output_dir
+    if not public_root.is_absolute():
+        public_root = Path(resolution["source_path"]).parent / public_root
+    public_html = public_root / "discoveries" / f"{run_dir.name}.html"
+    FileArtifactStore(public_root).write_text(
+        Path("discoveries") / public_html.name, discovery_html
+    )
     result = StageResult(
         run_id=run_dir.name, stage="rank", status="success", started_at=started,
         finished_at=datetime.now(timezone.utc), input_refs=["01-sync/research-signals.jsonl"],
         outputs={"candidates": "02-rank/briefing-candidates.jsonl",
                  "evidence": "02-rank/evidence.jsonl",
                  "explanations": "02-rank/paper-explanations.jsonl",
-                 "report": "02-rank/ranking-report.json"},
+                 "report": "02-rank/ranking-report.json",
+                 "discovery_html": "02-rank/discovery.html"},
         counts=output.report["counts"], next_stage_allowed=True,
     )
     store.write_json(Path("02-rank/stage-result.json"), result.model_dump(mode="json"))
     manifest = store.read_json(Path("run-manifest.json"))
     manifest["stages"]["rank"] = "02-rank/stage-result.json"
     manifest["outputs"]["briefing_candidates"] = "02-rank/briefing-candidates.jsonl"
+    manifest["outputs"]["public_discovery_html"] = str(public_html)
     store.write_json(Path("run-manifest.json"), manifest)
     return run_dir

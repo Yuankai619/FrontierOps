@@ -9,7 +9,7 @@ from typing import Mapping
 
 class FilesystemOutputPublisher:
     def publish(self, run_dir: Path, output_root: Path, outputs: Mapping[str, str]) -> Path:
-        root = output_root.resolve()
+        root = (output_root / "briefings").resolve()
         root.mkdir(parents=True, exist_ok=True)
         temporary = Path(tempfile.mkdtemp(prefix=".frontier-publish-", dir=root))
         try:
