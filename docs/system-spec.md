@@ -1,0 +1,49 @@
+# FrontierOps Living System Spec
+
+## Product goal
+
+After user-triggered Sync, FrontierOps explains new research. Briefings default to 300 seconds but remain configurable; one approved `BriefingSpec` drives HTML, slides, and narrated video.
+
+## Hexagonal architecture
+
+- **Domain** owns pure configuration and artifact contracts; it imports no outer layer.
+- **Application** owns use cases and the ports required from infrastructure.
+- **Adapters** implement ports for YAML, filesystems, clocks, providers, renderers, and user interfaces.
+- `frontierops.build` is a composition root; CLI is a driving adapter and never contains business rules.
+- Dependencies point inward: `adapters -> application -> domain`. Future stages follow the same boundary.
+
+## Pipeline
+
+`Build -> Sync -> Rank -> Brief -> Review -> Render`
+
+- **Build:** validate config and initialize a reproducible run.
+- **Sync:** compare sources with the last successful state; no built-in scheduler.
+- **Rank:** apply configured eligibility gates and decomposable scores.
+- **Brief:** explain problem, method, novelty, experiments, limitations, and relevance.
+- **Review:** block unsupported claims, broken evidence, duplicates, or duration overflow.
+- **Render:** generate all formats from one approved spec.
+
+## Core artifacts
+
+| Artifact | Responsibility |
+|---|---|
+| `ResearchSignal` | A new or changed paper, decision, release, benchmark, or local document |
+| `Evidence` | A source-grounded fragment with a stable locator |
+| `BriefingCandidate` | A normalized, scored candidate with an eligibility trace |
+| `ResearchDevelopment` | A cross-source, cross-run research development |
+| `BriefingSpec` | Renderer-neutral, timed, evidence-linked briefing content |
+| `RunManifest` | Inputs, outputs, versions, stages, warnings, and failures for one run |
+
+## Persistence and policy
+
+- `.frontier/runs/` is append-only; `.frontier/state/` holds cursors; `.frontier/cache/raw/` holds immutable source snapshots.
+- Failed Sync runs remain inspectable but never advance the last-successful cursor.
+- `frontier.yaml` owns domain policy; unknown fields fail and secrets are only environment references.
+- Gates pass, exclude, warn, or exempt candidates; scores only order eligible candidates.
+
+## Runtime and acceptance
+
+- Python 3.12 and `uv` are required; `uv.lock` and `uv sync --locked` make installs reproducible.
+- `frontier build --config <path>` creates standard stage output and a `RunManifest`.
+- Unit and integration tests run through `uv run --locked`.
+- Repeated Build runs are independent, and unknown configuration fields fail visibly.

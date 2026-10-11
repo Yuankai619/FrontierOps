@@ -1,0 +1,26 @@
+name: PR policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate title, description, and size
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          [[ "$PR_TITLE" =~ ^(feat|fix|docs|test|refactor|chore|ci)(\([a-z0-9_-]+\))?:\ .+ ]] || { echo "Use a Conventional Commit title."; exit 1; }
+          printf '%s' "$PR_TITLE" | LC_ALL=C grep -q '^[[:print:]]*$' || { echo "PR title must use English/ASCII characters."; exit 1; }
+          printf '%s' "$PR_BODY" | grep -P '[\x{3400}-\x{9FFF}]' >/dev/null || { echo "PR description must contain Chinese."; exit 1; }
+          lines=$(git diff --numstat "$BASE_SHA...$HEAD_SHA" | awk '$3 !~ /(^|\/)(uv\.lock|.*\.lock|\.frontier|dist|build)(\/|$)/ {a+=$1; d+=$2} END {print a+d+0}')
+          echo "Counted changed lines: $lines"
+          test "$lines" -le 600 || { echo "PR exceeds the 600-line limit."; exit 1; }
