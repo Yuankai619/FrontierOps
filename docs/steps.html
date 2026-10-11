@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>四個使用步驟 — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
+<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
+<main class="container doc-page"><h1>四個使用步驟</h1><p class="lead">Skill 由 Agent 執行；以下的單字就是研究者輸入。只有資訊不足時，Agent 才應追問。</p>
+<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html">Quick Start</a><a href="steps.html" aria-current="page">四個使用步驟</a><a href="example.html">AutoSci 範例</a><a href="configuration.html">frontier.yaml</a><a href="commands.html">指令參考</a><a href="outputs.html">輸出與紀錄</a></nav><article class="docs-main">
+<section><h2>Setup</h2><pre><code>setup</code></pre><p>輸入是目前工作目錄。Agent 檢查 uv、安裝或使用本地 Harness，建立 active <code>frontier.yaml</code> 和輸出目錄。已有設定時不覆寫。只有不清楚目前專案在哪裡，才問路徑。</p><p>交付：設定路徑、安裝方式及缺少的可選工具。它不抓論文。</p></section>
+<section><h2>Config</h2><pre><code>config
+config https://arxiv.org/pdf/2605.31468</code></pre><p>不帶內容時，Agent 先讀現有 YAML，再問你要追蹤什麼或改哪個欄位。附 arXiv URL 時，它可取得 PDF 與核對過的書目，存到 <code>data/library/</code>，並設定來源。未指定的時長和格式沿用現有值。</p><p>變更先寫入 <code>.frontier/config-drafts/</code>，經 validate、diff 才套用到 active <code>frontier.yaml</code>。Config 不會自動 Sync。</p></section>
+<section><h2>Discover</h2><pre><code>discover</code></pre><p>Agent 此時才執行 Sync 與 Rank。結果頁列本次新增／更新、先前收錄與每次 Run 的數量；你可勾選要解說的論文並儲存。互動頁將選取寫進同一 Run 的 <code>02-rank/briefing-selection.json</code>。如果只是開啟靜態 HTML，需下載選取檔交給 Agent。</p><p>沒有新論文時應如實回報，不會憑空產生 briefing。排序分數不能視為論文品質。</p></section>
+<section><h2>Briefing</h2><pre><code>briefing</code></pre><p>Agent 讀取剛才 Run 的選取檔，不要求你再列一次論文。若未選而合格論文不只一篇，才問你要解說哪些。Agent 對照原文修正草稿，通過 Review 後 Render；時長與輸出格式以 YAML 為準，缺必要設定時才追問。</p><p>每篇論文各有一份 HTML 與 OpenSlide 專案。原圖／精確引句和來源頁碼應與主張一致；Review 的結構檢查不能替代 Agent 的語意核對。</p></section>
+</article></div></main></body></html>

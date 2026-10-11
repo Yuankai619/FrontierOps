@@ -1,0 +1,25 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>指令參考 — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
+<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
+<main class="container doc-page"><h1>指令參考</h1><p class="lead">下列 CLI 供 Skill 操作，也方便開發者逐階段除錯。一般研究者只需輸入四個 Skill 動作。</p>
+<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html">Quick Start</a><a href="steps.html">四個使用步驟</a><a href="example.html">AutoSci 範例</a><a href="configuration.html">frontier.yaml</a><a href="commands.html" aria-current="page">指令參考</a><a href="outputs.html">輸出與紀錄</a></nav><article class="docs-main">
+<section><h2>如何執行</h2><p>在原始碼 checkout，每個 <code>frontier</code> 前加 <code>uv run --locked</code>；用 Setup 安裝為 uv tool 後直接執行 <code>frontier</code>。這兩種方式都不會把 source code 複製進研究 workspace。</p><pre><code>uv run --locked frontier --help
+frontier --help</code></pre></section>
+<section><h2>設定與來源</h2><table><thead><tr><th>命令</th><th>作用</th></tr></thead><tbody>
+<tr><td><code>frontier setup --workspace PATH --name NAME</code></td><td>建立 active YAML 與公開輸出資料夾；不覆寫既有 YAML。</td></tr>
+<tr><td><code>frontier schema config --format json</code></td><td>印出設定 schema、預設值及型別。</td></tr>
+<tr><td><code>frontier config inspect/validate --config PATH</code></td><td>讀取解析後設定或檢查錯誤；不改檔。</td></tr>
+<tr><td><code>frontier config draft --config PATH --output PATH</code></td><td>複製為候選 YAML；接著 Agent 編輯這份候選。</td></tr>
+<tr><td><code>frontier config diff --old PATH --new PATH</code></td><td>列出欄位層級差異。</td></tr>
+<tr><td><code>frontier config apply --candidate PATH --config PATH</code></td><td>驗證候選後更新 active YAML。</td></tr>
+<tr><td><code>frontier scholar/venue resolve ...</code></td><td>查穩定 ID 候選；目前 resolver 是離線 fixture，不代表 live 訂閱成功。</td></tr>
+</tbody></table></section>
+<section><h2>一次 Run 的內部階段</h2><table><thead><tr><th>命令</th><th>讀取、寫入與失敗情況</th></tr></thead><tbody>
+<tr><td><code>frontier build --config PATH</code></td><td>驗證 YAML，建立 Run 與設定快照；不抓論文。</td></tr>
+<tr><td><code>frontier sync --config PATH</code></td><td>使用者觸發後抓資料，依上次成功狀態產生新／更新訊號；輸出 Run 絕對路徑。來源錯誤會留在 stage result。</td></tr>
+<tr><td><code>frontier rank --run PATH</code></td><td>對該 Run 的訊號做 Gate、排序與 Evidence 擷取，產生 Discover 頁。不會把舊論文重算成新論文。</td></tr>
+<tr><td><code>frontier discovery serve --run PATH</code></td><td>開啟只綁本機的互動頁，驗證並保存選取檔。終止服務後，已儲存的 JSON 仍在 Run。</td></tr>
+<tr><td><code>frontier brief --run PATH</code></td><td>讀同一 Run 的候選與選取檔，寫可修改的草稿；自動抽句需回原文檢查。</td></tr>
+<tr><td><code>frontier review --run PATH</code></td><td>核對來源 ID、數字、精確引句和規則；失敗時阻止 Render。無法取代語意審稿。</td></tr>
+<tr><td><code>frontier render --run PATH</code></td><td>只從 approved spec 產生 HTML、OpenSlide 與可選影片 preview；每篇有獨立 HTML／slides 專案。</td></tr>
+</tbody></table><p>Rank、Brief、Review、Render 均須傳入同一個 Run 路徑。不能從新 Run 取排名、拿舊 Run 的 Evidence 發布。</p></section>
+</article></div></main></body></html>

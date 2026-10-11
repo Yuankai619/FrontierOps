@@ -1,0 +1,15 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quick Start — FrontierOps</title><link rel="stylesheet" href="site.css"></head><body>
+<header class="site-header"><div class="container header-inner"><a class="wordmark" href="index.html">FrontierOps</a><nav><a href="guide.html">文件</a><a class="github-link" href="https://github.com/Yuankai619/FrontierOps"><img src="github.svg" alt="">GitHub</a></nav></div></header>
+<main class="container doc-page"><h1>Quick Start</h1><p class="lead">研究者只需對 Coding Agent 說 Setup、Config、Discover、Briefing。以下是第一次使用時要準備的環境。</p>
+<div class="docs-layout"><nav class="docs-nav" aria-label="文件頁面"><a href="quick-start.html" aria-current="page">Quick Start</a><a href="steps.html">四個使用步驟</a><a href="example.html">AutoSci 範例</a><a href="configuration.html">frontier.yaml</a><a href="commands.html">指令參考</a><a href="outputs.html">輸出與紀錄</a></nav><article class="docs-main">
+<section><h2>準備環境</h2><p>需要 <code>uv &gt;=0.12.20, &lt;0.14</code>。若要建置 OpenSlide，還需要 Node.js 與 npm。先進入你的研究專案目錄，再在 Agent 裡安裝 FrontierOps plugin。</p>
+<h3>Claude Code</h3><pre><code>claude plugin marketplace add Yuankai619/FrontierOps
+claude plugin install frontierops@frontierops</code></pre>
+<h3>Codex CLI</h3><pre><code>codex plugin marketplace add Yuankai619/FrontierOps
+codex plugin add frontierops@frontierops</code></pre>
+<h3>GitHub Copilot CLI</h3><pre><code>copilot plugin install Yuankai619/FrontierOps:plugins/frontierops</code></pre>
+<p class="note">這些是宿主的 plugin 命令。此次端到端範例在 Codex 使用本機 checkout；Claude／Copilot 的遠端安裝尚未實測。宿主語法可查 <a href="https://code.claude.com/docs/en/plugins">Claude</a>、<a href="https://developers.openai.com/plugins/build/plugins">Codex</a>、<a href="https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference">Copilot CLI</a> 文件。</p></section>
+<section><h2>第一次對 Agent 說</h2><pre><code>setup</code></pre><p>Setup 以目前目錄為研究 workspace，檢查環境並建立 <code>frontier.yaml</code> 與 <code>frontier_output/</code>。它不會同步論文。若目前目錄不是研究專案，Agent 才會問你要使用哪裡。</p>
+<p>plugin 只提供 Skill。正式安裝時 Setup 執行 <code>uv tool install git+https://github.com/Yuankai619/FrontierOps.git</code>，Python 套件安裝在 uv tool 環境，研究 workspace 只有設定、素材與輸出，沒有 FrontierOps 原始碼。開發者在 repo checkout 使用 <code>uv sync --locked</code> 與 <code>uv run --locked frontier</code>；套件從該 checkout 的虛擬環境執行，也不會複製到測試 workspace。</p></section>
+<section><h2>接著做什麼</h2><p>最短路徑是 <code>config &lt;arXiv PDF URL&gt;</code>、<code>discover</code>、選取論文後 <code>briefing</code>。詳見<a href="steps.html">四個使用步驟</a>，或直接看<a href="example.html">AutoSci 對話範例</a>。</p></section>
+</article></div></main></body></html>
