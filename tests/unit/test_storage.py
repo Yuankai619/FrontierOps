@@ -16,6 +16,16 @@ class FileArtifactStoreTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 store.write_json(Path("../escape.json"), {})
 
+    def test_remove_is_idempotent_and_confined(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            store = FileArtifactStore(Path(directory))
+            store.write_text(Path("approved.txt"), "approved")
+            store.remove(Path("approved.txt"))
+            store.remove(Path("approved.txt"))
+            self.assertFalse((Path(directory) / "approved.txt").exists())
+            with self.assertRaises(ValueError):
+                store.remove(Path("../outside.txt"))
+
 
 class SQLiteStateIndexTests(unittest.TestCase):
     def test_initialize_is_idempotent_and_preserves_state(self) -> None:

@@ -85,3 +85,11 @@ brief:
   maximum_seconds_per_development: 75
   narration_words_per_minute: 140
   outputs: [html, slides, video]
+review:
+  required: true
+  fail_on_missing_evidence: true
+  fail_on_broken_source: true
+  fail_on_unsupported_number: true
+  fail_on_duration_over_budget: true
+  fail_on_duplicate_development: true
+  auto_fix: safe_only
