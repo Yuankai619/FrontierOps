@@ -173,6 +173,7 @@ def _sections(
             claims=claims,
             development_id=development.artifact_id,
             paper_explanation=explanation,
+            paper_metadata=candidate.paper_metadata,
             narration_script=script,
             caption_text=script,
             visual_hint="Show the problem, method, experiment, and limitation with evidence links.",

@@ -9,7 +9,7 @@ import re
 from typing import Any
 
 from frontierops.domain.models import (
-    BriefingCandidate, Evidence, FrontierConfig, GateConfig, GateDecision, ResearchSignal,
+    BriefingCandidate, Evidence, FrontierConfig, GateConfig, GateDecision, PaperMetadata, ResearchSignal,
 )
 
 
@@ -72,6 +72,7 @@ class RankService:
                 features=features,
                 gate_trace=gates,
                 total_score=round(total, 6),
+                paper_metadata=_metadata(signal),
             ))
         candidates.sort(key=lambda item: (-item.total_score, item.artifact_id))
         excluded = [item for item in candidates if any(g.result == "exclude" for g in item.gate_trace)]
@@ -152,10 +153,30 @@ def _gate(
 
 
 def _subject_id(signal: ResearchSignal) -> str:
+    if signal.payload.get("arxiv_id"):
+        return f"arxiv:{signal.payload['arxiv_id']}"
     external = signal.payload.get("externalIds", {})
     if external.get("ArXiv"):
         return f"arxiv:{external['ArXiv']}"
     return f"{signal.source_provider}:{signal.external_id}"
+
+
+def _metadata(signal: ResearchSignal) -> PaperMetadata:
+    if signal.payload.get("metadata"):
+        return PaperMetadata.model_validate(signal.payload["metadata"])
+    payload = signal.payload
+    authors = [author.get("name", "") if isinstance(author, dict) else str(author)
+               for author in payload.get("authors", [])]
+    venue = payload.get("venue") or None
+    return PaperMetadata(
+        title=payload.get("title"), authors=[name for name in authors if name],
+        published_at=payload.get("published_at") or payload.get("publicationDate"),
+        publication_venue=venue,
+        publication_status="conference" if venue else "preprint" if signal.source_provider == "arxiv" else "unknown",
+        source_url=payload.get("abstract_url") or payload.get("url") or payload.get("pdf_url"),
+        arxiv_id=payload.get("arxiv_id") or payload.get("externalIds", {}).get("ArXiv")
+        or (signal.external_id if signal.source_provider == "arxiv" else None),
+    )
 
 
 def _evidence(signal: ResearchSignal, now: datetime) -> list[Evidence]:

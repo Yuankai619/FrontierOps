@@ -40,6 +40,7 @@
 
 - `.frontier/runs/` 採 append-only；`.frontier/state/` 保存 cursors；`.frontier/cache/raw/` 保存 immutable source snapshots。
 - `project.output_dir` 預設 `frontier_output/`，保存可供研究人員直接開啟的成果；內部 Run 與公開成果分離。Setup 不覆蓋既有 `frontier.yaml`，新設定的來源預設關閉，產出先選 HTML／slides；影片須確認 TTS 與授權後啟用。
+- 本地 PDF 可有同名 `.pdf.json` sidecar，保存經原文／來源頁核對的標題、作者、機構、日期、發表狀態、來源 URL 與 arXiv ID。Sidecar 變更視為來源版本更新。缺欄位保留未知，不得以預印本推定 conference 接受。Config Skill 的候選 YAML 保存在 `.frontier/config-drafts/`，只供 validate／diff；`frontier.yaml` 是唯一生效設定。
 - JSON／JSONL artifacts 是可直接檢查的 source of truth；SQLite 只是可重建的查詢索引。
 - 失敗的 Sync Run 仍保留供除錯，但不得推進 last-successful cursor。
 - `frontier.yaml` 擁有 domain policy；未知欄位必須失敗，secret 只保存環境變數名稱。
