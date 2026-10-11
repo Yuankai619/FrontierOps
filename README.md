@@ -20,7 +20,9 @@ Build -> Sync -> Rank -> Brief -> Review -> Render
 - 由使用者執行 `frontier sync` 才比較上次成功狀態；不啟動背景排程。
 - 保存 immutable raw cache，並以 stable external ID 與內容雜湊避免重複訊號。
 
-目前 Sync 使用凍結 fixture；live provider、排序、內容解釋、Review，以及 HTML／Slides／Video 仍在後續 stacked PR 實作。
+目前 Sync 支援凍結 fixture，以及 arXiv／Semantic Scholar live provider；排序、內容解釋、Review，以及 HTML／Slides／Video 仍在後續 stacked PR 實作。
+
+Live arXiv 依 `paper_ids`、`queries` 或 `categories` 查詢並保留 base ID 與 version。Semantic Scholar 依 tracker 中已解析的 stable author ID 分頁取得論文；`SEMANTIC_SCHOLAR_API_KEY` 是選用項，未設定時使用公開無金鑰額度。Live smoke test 不放入 deterministic CI。
 
 ## 架構概覽
 

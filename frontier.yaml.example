@@ -21,11 +21,22 @@ tracking:
 sources:
   semantic_scholar:
     enabled: false
+    mode: live
+    base_url: https://api.semanticscholar.org/graph/v1
+    api_key_env: SEMANTIC_SCHOLAR_API_KEY
+    page_size: 100
+    max_results: 100
+    request_delay_seconds: 3
   arxiv:
     enabled: true
     mode: fixture
     fixture_path: data/fixtures/arxiv-papers.json
     overlap_days: 3
+    base_url: https://export.arxiv.org/api/query
+    paper_ids: ["2510.05096"]
+    page_size: 100
+    max_results: 100
+    request_delay_seconds: 3
 sync:
   trigger_mode: manual
   baseline: last_successful_sync
