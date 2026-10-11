@@ -33,12 +33,12 @@
   <main id="top">
     <div class="hero"><div class="wrap intro">
       <h1>從新論文，到值得討論的研究理解。</h1>
-      <p class="lead">FrontierOps 把來源、證據、篩選決策與解釋保存成可查核的研究簡報流程。研究人員按下 Sync 才更新；既有 Coding Agent 負責深入閱讀，Harness 確保每個結論都能回到原文。</p>
-      <div class="hero-actions"><a class="primary" href="#quickstart">跑一次離線 Demo</a><a class="textlink" href="user-manual.md">閱讀完整使用手冊</a></div>
+      <p class="lead">向你熟悉的 Coding Agent 描述研究興趣，它會設定追蹤範圍、在你要求時搜尋新論文，並用可回到原文的證據解釋其方法與限制。FrontierOps 保存每次判斷與成果，不在背景自行同步。</p>
+      <div class="hero-actions"><a class="primary" href="#quickstart">安裝 Agent Skill</a><a class="textlink" href="user-manual.md">閱讀完整使用手冊</a></div>
     </div></div>
 
     <section class="content" id="concept"><div class="wrap">
-      <div class="section-head"><div class="section-index">設計邏輯</div><div><h2>先理解一篇論文，再決定怎麼呈現</h2><p>一篇新論文不應只變成一張摘要卡。FrontierOps 的核心解釋依序回答：原本的問題、作者的做法、實驗真正支持的結論，以及仍待驗證的限制。</p></div></div>
+      <div class="section-head"><div class="section-index">設計邏輯</div><div><h2>你只需說出研究問題；細節由 Agent Skill 操作</h2><p>使用者看到的是 Setup、Config、Discover、Briefing 四個動作。內部六階段保留可重現的資料與判斷，並依序回答論文的問題、作者做法、證據支持的結論與限制。</p></div></div>
       <div class="flow" aria-label="六階段資料流">
         <div><span class="number">01</span><strong>Build</strong><span>驗證設定，建立可追溯的 Run。</span></div>
         <div><span class="number">02</span><strong>Sync</strong><span>使用者觸發，與上次成功同步比較。</span></div>
@@ -52,21 +52,25 @@
     </div></section>
 
     <section class="content" id="quickstart"><div class="wrap">
-      <div class="section-head"><div class="section-index">快速開始</div><div><h2>用凍結資料跑通一次流程</h2><p>需要 Python 3.12 與 uv。範例設定使用離線 arXiv／OpenReview fixture，不需 API key；之後再切換 live provider。請在 repo 根目錄執行。</p></div></div>
-      <div class="codebox"><button class="copy" type="button" data-copy="install">複製</button><pre id="install">uv sync --locked
-uv run --locked frontier config validate --config frontier.yaml.example
-uv run --locked frontier sync --config frontier.yaml.example</pre></div>
-      <p>Sync 會印出本次 Run 的絕對路徑。以下所有 <code>&lt;run-path&gt;</code> 都替換成<strong>同一個</strong>路徑；不要混用另一次 Build 的 Run。</p>
-      <div class="codebox"><button class="copy" type="button" data-copy="pipeline">複製</button><pre id="pipeline">uv run --locked frontier rank --run &lt;run-path&gt;
-uv run --locked frontier brief --run &lt;run-path&gt;
-uv run --locked frontier review --run &lt;run-path&gt;
-uv run --locked frontier render --run &lt;run-path&gt;</pre></div>
-      <ol class="steps"><li>打開 <code>&lt;run-path&gt;/05-render/briefing.html</code>：切換問題、展開證據並檢查 PDF 連結。</li><li>到 <code>&lt;run-path&gt;/05-render/open-slide/</code> 執行 <code>npm install</code>、<code>npm run build</code>、<code>npm run preview</code>，開啟 <code>/s/frontier-briefing</code>；OpenSlide 工具列可匯出 PDF。</li><li>影片須先在 <code>05-render/hyperframes/</code> 執行 <code>npx hyperframes check</code>、<code>npx hyperframes preview --background</code>；使用者審閱核准後才編碼 MP4。預設 fixture 不啟用 HeyGen，因此不會有影片。</li></ol>
+      <div class="section-head"><div class="section-index">快速開始</div><div><h2>安裝 Skill，然後直接對 Agent 說話</h2><p>以下選一種宿主安裝（GitHub Copilot 指 Copilot CLI）。遠端安裝需待 plugin PR 合併到預設分支；本機可改用此 checkout 的路徑。安裝 Skill 與安裝 Python Harness 是兩件事，Setup Skill 會用 uv 完成後者。</p></div></div>
+      <div class="codebox"><button class="copy" type="button" data-copy="install">複製</button><pre id="install"># Claude Code
+claude plugin marketplace add Yuankai619/FrontierOps
+claude plugin install frontierops@frontierops
+
+# Codex CLI
+codex plugin marketplace add Yuankai619/FrontierOps
+codex plugin add frontierops@frontierops
+
+# GitHub Copilot CLI
+copilot plugin install Yuankai619/FrontierOps:plugins/frontierops</pre></div>
+      <ol class="steps"><li>在研究專案內告訴 Agent：「用 <code>frontier-setup</code> 在這裡設定 FrontierOps。」它會建立真的 <code>frontier.yaml</code> 與 <code>frontier_output/</code>，不覆蓋既有設定；uv 為必備前置工具。</li><li>說明主題、學者或會議，請 <code>frontier-config</code> 更新設定；缺少關鍵資訊時會詢問。<code>frontier.yaml.example</code> 只供離線示例，不是日常使用的 active 設定。</li><li>請 <code>frontier-discover</code> 檢查新研究，打開 <code>frontier_output/discoveries/&lt;run-id&gt;.html</code> 看排序理由。選好論文後請 <code>frontier-briefing</code> 解釋它；成果在 <code>frontier_output/briefings/&lt;run-id&gt;/</code>。</li></ol>
+      <p class="sidenote">投影片是 OpenSlide 專案，需 Node.js／npm 建置；影片需明確啟用 HyperFrames 與旁白服務，預覽不等於 MP4。各框架 Skill 在其專案／環境內安裝，不複製進 FrontierOps plugin。</p>
     </div></section>
 
     <section class="content" id="commands"><div class="wrap">
-      <div class="section-head"><div class="section-index">指令索引</div><div><h2>每個指令都有明確邊界</h2><p>以下省略共同前綴 <code>uv run --locked frontier</code>。所有 Run 後續階段都接同一個 <code>--run PATH</code>。</p></div></div>
+      <div class="section-head"><div class="section-index">內部指令索引</div><div><h2>Agent 用這些指令，研究人員不用逐段操作</h2><p>以下是開發與除錯參考；主要入口是四個 Agent Skill。若在原始碼 checkout 中執行，前綴為 <code>uv run --locked frontier</code>。所有 Run 後續階段都接同一個 <code>--run PATH</code>。</p></div></div>
       <table><thead><tr><th scope="col">指令</th><th scope="col">用途</th></tr></thead><tbody>
+        <tr><td><code>setup --workspace PATH --name NAME</code></td><td>初始化 active frontier.yaml 與公開輸出資料夾，不覆蓋既有設定。</td></tr>
         <tr><td><code>schema config --format json</code></td><td>查看嚴格的 YAML 設定契約與預設值。</td></tr>
         <tr><td><code>config inspect --config PATH</code></td><td>讀取並展開設定，不改檔案。</td></tr>
         <tr><td><code>config validate --config PATH</code></td><td>拒絕未知欄位及無效門檻。</td></tr>
@@ -99,7 +103,7 @@ uv run --locked frontier render --run &lt;run-path&gt;</pre></div>
         <tr><td><code>rendering.video</code></td><td>是否啟用 HeyGen／HyperFrames preview、語音、畫布、fps 與品質。</td></tr>
       </tbody></table>
       <div class="two"><div class="rule"><h3>Gate 不等於分數</h3><p>Gate 先判定候選是否具備入選資格，並留下 <code>pass</code>、<code>exclude</code>、<code>warn</code> 或 <code>exempt</code>。例如新論文可豁免引用數門檻；其餘合格論文才依權重排序。</p></div><div class="rule"><h3>每次執行都可回查</h3><p><code>.frontier/runs/&lt;run-id&gt;/</code> 保留六階段產物和 Run Manifest；<code>.frontier/state/</code> 記錄上次成功同步，<code>.frontier/cache/raw/</code> 保留來源快照。新 Run 不覆蓋舊 Run。</p></div></div>
-      <div class="figure-note">需要自然語言修改設定時，用 <a href="https://github.com/Yuankai619/FrontierOps/blob/main/skills/frontier-config/SKILL.md">frontier-config Skill</a> 的 draft → validate → diff → apply；需要讓 Coding Agent 跑完整簡報與檢查媒體時，使用 <a href="https://github.com/Yuankai619/FrontierOps/blob/main/skills/frontier-briefing/SKILL.md">frontier-briefing Skill</a>。</div>
+      <div class="figure-note">研究人員可直接要求 <a href="../plugins/frontierops/skills/frontier-config/SKILL.md">Config Skill</a> 修改設定、<a href="../plugins/frontierops/skills/frontier-discover/SKILL.md">Discover Skill</a> 找新論文，以及 <a href="../plugins/frontierops/skills/frontier-briefing/SKILL.md">Briefing Skill</a> 查核並解釋論文。內部差異、證據與核准紀錄仍可供 Agent 逐步檢查。</div>
     </div></section>
   </main>
   <footer><div class="wrap footer-inner"><span>FrontierOps — 以原文證據為中心的研究簡報。</span><span><a href="user-manual.md">使用手冊</a>　<a href="system-spec.md">系統規格</a>　<a href="https://github.com/Yuankai619/FrontierOps">原始碼</a></span></div></footer>

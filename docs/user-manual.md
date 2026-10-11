@@ -2,49 +2,39 @@
 
 FrontierOps 是供既有 Coding Agent 使用的研究簡報 Harness。研究人員**主動執行 Sync**，系統才比較上次成功同步後的新訊號；其首要成果是幫人理解「這篇論文解決什麼問題、怎麼做、證據支持到哪裡」，而非僅列論文清單。HTML、OpenSlide 投影片與影片預覽共用通過 Review 的 `BriefingSpec`。
 
-## Quick start：先跑離線 Demo
+## Quick Start：研究人員只需四個 Agent Skill
 
-需求：Python 3.12、`uv >= 0.12.20, < 0.13`；投影片建置另需 Node.js／npm。以下命令都在 repo 根目錄執行；`frontier.yaml.example` 使用凍結的 arXiv／OpenReview fixture，不需要外部 API。
-
-```bash
-uv sync --locked
-uv run --locked frontier config validate --config frontier.yaml.example
-uv run --locked frontier sync --config frontier.yaml.example
-```
-
-Sync 的 stdout 會印出本次 Run 的**絕對路徑**，例如 `/path/to/FrontierOps/.frontier/runs/run_...`。將下列 `<run-path>` 全部換成同一個路徑；不要把另一次 `build` 的 Run 混進來。`sync` 會自動做 Build。
+需求：先安裝 `uv >= 0.12.20, < 0.13`；slides/video 另需 Node.js／npm。先在 Claude Code、Codex CLI 或 GitHub Copilot CLI 裝 FrontierOps plugin（遠端 repository 必須包含已合併的 plugin 版本）：
 
 ```bash
-uv run --locked frontier rank --run <run-path>
-uv run --locked frontier brief --run <run-path>
-uv run --locked frontier review --run <run-path>
-uv run --locked frontier render --run <run-path>
-uv run --locked python -m unittest discover -s tests -v
+claude plugin marketplace add Yuankai619/FrontierOps
+claude plugin install frontierops@frontierops
+
+codex plugin marketplace add Yuankai619/FrontierOps
+codex plugin add frontierops@frontierops
+
+copilot plugin install Yuankai619/FrontierOps:plugins/frontierops
 ```
 
-打開 `<run-path>/05-render/briefing.html`，切換論文問題、展開 Evidence、放大圖片並檢查 PDF 來源連結。投影片的 `slides` 輸出是**OpenSlide 原始專案**，不是已建好的 PDF：
+安裝 plugin 只有 Skill，還沒有 Python Harness。進入研究專案後，請 Agent 使用 [`frontier-setup`](../plugins/frontierops/skills/frontier-setup/SKILL.md)：「幫我在這裡 setup FrontierOps。」它會用 uv 安裝 Harness、檢查可用工具、執行 `frontier setup`，並回報 `frontier.yaml` 與 `frontier_output/` 的實際路徑。已存在的 YAML 不會被覆蓋；新 YAML 的來源預設關閉，需要下一步設定。
 
-```bash
-cd <run-path>/05-render/open-slide
-npm install
-npm run build
-npm run preview
-```
+1. 使用 [`frontier-config`](../plugins/frontierops/skills/frontier-config/SKILL.md)：「我研究多模態論文理解，追蹤某位學者與 CVPR，給我 8 分鐘互動 HTML 與 slides。」如果主題或來源不清楚，Agent 先詢問；學者／會議 ID 無法確認時不會臆造。產生的候選 YAML 先驗證、顯示差異，再套用到 active `frontier.yaml`。
+2. 使用 [`frontier-discover`](../plugins/frontierops/skills/frontier-discover/SKILL.md)：「現在檢查新論文，說明篩選理由。」這才會主動 Sync；Rank 的 HTML 公開於 `frontier_output/discoveries/<run-id>.html`，能搜尋、切換合格／排除，展開 Gate 與權重貢獻。
+3. 使用 [`frontier-briefing`](../plugins/frontierops/skills/frontier-briefing/SKILL.md)：「用剛才的 Run 解釋選中的論文，產生 HTML 和投影片。」Agent 會核對 Evidence，跑 Brief、Review、Render，成果在 `frontier_output/briefings/<run-id>/`。影片需明確啟用與核准；旁白預覽不等於已匯出的 MP4。
 
-到 preview 顯示的 `/s/frontier-briefing` 路徑檢查 deck；PDF 使用 OpenSlide 工具列匯出。`npm` 僅管理 OpenSlide 的 JavaScript 相依，Python 仍一律用 `uv`。預設例子雖列出 `video` 目標，但未啟用 HeyGen TTS adapter，**不會有 MP4**；請把它視為刻意顯示的待完成目標，而非成功的影片。
+`frontier.yaml.example` 是**不需 API key 的離線 fixture 示例**，適合開發者測試，並非使用者的 active 設定。Agent 使用的是 `frontier.yaml`。每次 Run 的原始資料與中間 Artifact 在 `.frontier/runs/<run-id>/`；公開成果才放 `frontier_output/`。Briefing Skill 會在生成的 OpenSlide 專案內同步其原生 Skill；若啟用影片則使用 HyperFrames 原生 Skill。FrontierOps 不複製或重造這些框架的技能。
 
-## 與 Coding Agent 協作
+## 開發者／除錯用指令
 
-- 設定新主題、學者或閥值：請 Agent 讀 [`frontier-config` Skill](../skills/frontier-config/SKILL.md)，產生 candidate 設定、驗證及 diff，經確認才 apply。
-- 產生論文簡報：請 Agent 讀 [`frontier-briefing` Skill](../skills/frontier-briefing/SKILL.md)，執行手動 Sync → Rank → Brief → Review → Render，並實際檢查論文圖、Evidence、OpenSlide 與影片預覽。
-- 可直接用自然語言說：「追蹤某研究者的 Semantic Scholar stable ID，簡報改成 8 分鐘；先給我設定差異，不要套用。」Skill 是操作契約，不是另造 Agent、LLM client 或排程服務。
+在 FrontierOps 原始碼 checkout 中，使用 `uv sync --locked`，再以 `uv run --locked frontier` 執行下表指令；測試為 `uv run --locked python -m unittest discover -s tests -v`。手動重現時，`sync` 會印出 Run 的**絕對路徑**；後續 rank、brief、review、render 都必須使用同一路徑。研究人員不必自行逐步執行。
 
 ## 指令參考
 
-每個 `frontier ...` 指令前都加 `uv run --locked`。未列出的選項不是隱藏功能；用 `frontier --help` 查看目前 CLI。
+在原始碼 checkout 中，`frontier ...` 前面加 `uv run --locked`；透過 Setup Skill 安裝為獨立工具後直接用 `frontier ...`。未列出的選項不是隱藏功能；用 `frontier --help` 查看目前 CLI。
 
 | 指令 | 輸入與效果 |
 |---|---|
+| `setup --workspace PATH --name NAME` | 建立 active YAML 與公開輸出目錄，保留既有設定；Python 安裝由 Setup Skill 管理。 |
 | `schema config --format json` | 印出嚴格的 config JSON Schema，可查看所有預設值與型別。 |
 | `config inspect --config PATH` | 讀取並展開預設值，不修改檔案。 |
 | `config validate --config PATH` | 驗證 YAML；未知欄位或無效值會失敗。 |
@@ -55,20 +45,20 @@ npm run preview
 | `venue resolve --name NAME --year YEAR --provider openreview` | 查詢會議 stable venue ID 候選；目前 resolver 是離線 fixture。 |
 | `build --config PATH` | 驗證設定並建立新 Run、manifest、resolved config；不取回來源。 |
 | `sync --config PATH` | 使用者觸發 Build 與 delta sync；比較上次成功 Sync，不在背景定時執行。 |
-| `rank --run PATH` | 套用 Gate、權重與深度解釋；輸出候選、Evidence、排序報告。 |
+| `rank --run PATH` | 套用 Gate、權重與深度解釋；輸出候選、Evidence、排序報告與可開啟的 Discovery HTML。 |
 | `brief --run PATH` | 按內容與時間預算建立 renderer-neutral draft。 |
 | `review --run PATH` | 查 Evidence、來源、數字、重複與時間，通過後建立 approved spec。 |
-| `render --run PATH` | 只讀 approved spec，輸出互動 HTML、OpenSlide source，及在已啟用時的影片 preview。 |
+| `render --run PATH` | 只讀 approved spec，發布互動 HTML、OpenSlide source，及在已啟用時的影片 preview。 |
 
 ## `frontier.yaml` 設定參考
 
-從 [`frontier.yaml.example`](../frontier.yaml.example) 複製起步；所有路徑相對於 YAML 所在目錄解析。模型拒絕未知欄位。API key、OpenReview 密碼只填**環境變數名稱**，不可放 secret value。括號中的數字是未指定時的程式預設；範例檔可另行覆蓋。
+由 Setup Skill 建立 `frontier.yaml`，再由 Config Skill 按研究目的修改；[`frontier.yaml.example`](../frontier.yaml.example) 僅示範離線 fixture。所有路徑相對於 YAML 所在目錄解析。模型拒絕未知欄位。API key、OpenReview 密碼只填**環境變數名稱**，不可放 secret value。括號中的數字是未指定時的程式預設。
 
 | 路徑 | 意義 |
 |---|---|
 | `schema_version` | 設定契約版本，目前只能是 `"0.1"`。 |
 | `project.id / name` | 穩定專案 ID／顯示名稱，均必填。 |
-| `project.timezone / language / workspace_dir` | 時區（`UTC`）、內容語言（`en`）、Run 工作目錄（`.frontier`）。 |
+| `project.timezone / language / workspace_dir / output_dir` | 時區（`UTC`）、內容語言（`en`）、Run 工作目錄（`.frontier`）與公開成果目錄（`frontier_output`）。 |
 | `profile.topics[]` | 每個研究主題的 `id`、`description`、非負 `weight`（1）；用於相關度。 |
 | `profile.keywords.include / exclude` | 偏好的／排除的關鍵詞陣列；不要把它當全文理解的唯一依據。 |
 | `tracking.scholars[]` | `id` 是本地 tracker ID、`name` 是顯示名稱；`aliases` 處理別名，`identities` 保存 provider stable ID，`providers` 指來源；`backfill_days`（365）與 `always_include_new_publications`（true）控制追蹤視窗與新作優先。 |
