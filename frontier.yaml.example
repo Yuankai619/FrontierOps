@@ -82,4 +82,6 @@ ranking:
 brief:
   target_duration_seconds: 300
   maximum_developments: 5
+  maximum_seconds_per_development: 75
+  narration_words_per_minute: 140
   outputs: [html, slides, video]
