@@ -7,6 +7,7 @@
 - The primary user outcome is a grounded explanation of new papers.
 - Domain policy belongs in `frontier.yaml`, never in hidden constants.
 - HTML, slides, and narrated video must consume the same approved `BriefingSpec`.
+- When asked to run or improve a paper briefing, read `skills/frontier-briefing/SKILL.md`; configuration-only requests use `skills/frontier-config/SKILL.md`.
 
 ## Change workflow
 

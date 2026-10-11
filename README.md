@@ -214,7 +214,7 @@ rendering:
 
 ## Config lifecycle
 
-以下介面供使用者及 [`frontier-config` Skill](skills/frontier-config/SKILL.md) 建立安全的設定變更：
+以下介面供使用者及 [`frontier-config` Skill](skills/frontier-config/SKILL.md) 建立安全的設定變更；要讓既有 Coding Agent 執行並檢查完整論文簡報，使用 [`frontier-briefing` Skill](skills/frontier-briefing/SKILL.md)。
 
 ```bash
 uv run --locked frontier schema config --format json
