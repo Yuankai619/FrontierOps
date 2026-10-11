@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-frontier = "frontierops.cli:main"
+frontier = "frontierops.adapters.cli:main"
 
 [tool.uv]
 required-version = ">=0.12.20,<0.13"

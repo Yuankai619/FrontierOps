@@ -1,17 +1,14 @@
 schema_version: "0.1"
-
 project:
   id: adsl-frontier-demo
   name: ADSL Research Frontier Briefing
   timezone: Asia/Taipei
   language: zh-TW
   workspace_dir: .frontier
-
 sync:
   trigger_mode: manual
   baseline: last_successful_sync
   default_lookback_days: 14
-
 brief:
   target_duration_seconds: 300
   maximum_developments: 5

@@ -3,7 +3,7 @@ import unittest
 
 from pydantic import ValidationError
 
-from frontierops.models import BriefingSection, BriefingSpec, FrontierConfig
+from frontierops.domain.models import BriefingSection, BriefingSpec, FrontierConfig
 
 
 class ConfigTests(unittest.TestCase):
@@ -37,7 +37,3 @@ class BriefingSpecTests(unittest.TestCase):
                 sections=[BriefingSection(id="paper", duration_seconds=61, headline="Paper")],
                 render_targets=["html", "slides", "video"],
             )
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -2,55 +2,48 @@
 
 ## Product goal
 
-After a user runs Sync, FrontierOps compares current research sources with the last successful state and explains what new papers do. The default briefing duration is 300 seconds but is configurable. One approved `BriefingSpec` drives HTML, slides, and narrated video.
+After user-triggered Sync, FrontierOps explains new research. Briefings default to 300 seconds but remain configurable; one approved `BriefingSpec` drives HTML, slides, and narrated video.
 
-## MVP pipeline
+## Hexagonal architecture
 
-```text
-Build -> Sync -> Rank -> Brief -> Review -> Render
-```
+- **Domain** owns pure configuration and artifact contracts; it imports no outer layer.
+- **Application** owns use cases and the ports required from infrastructure.
+- **Adapters** implement ports for YAML, filesystems, clocks, providers, renderers, and user interfaces.
+- `frontierops.build` is a composition root; CLI is a driving adapter and never contains business rules.
+- Dependencies point inward: `adapters -> application -> domain`. Future stages follow the same boundary.
 
-- **Build:** validate and materialize config; initialize a reproducible run.
-- **Sync:** user-triggered delta collection; no built-in scheduler.
+## Pipeline
+
+`Build -> Sync -> Rank -> Brief -> Review -> Render`
+
+- **Build:** validate config and initialize a reproducible run.
+- **Sync:** compare sources with the last successful state; no built-in scheduler.
 - **Rank:** apply configured eligibility gates and decomposable scores.
 - **Brief:** explain problem, method, novelty, experiments, limitations, and relevance.
 - **Review:** block unsupported claims, broken evidence, duplicates, or duration overflow.
-- **Render:** generate HTML, slides, narration, captions, and video from one approved spec.
+- **Render:** generate all formats from one approved spec.
 
 ## Core artifacts
 
 | Artifact | Responsibility |
 |---|---|
-| `ResearchSignal` | A new or changed paper, review decision, release, benchmark, or local document |
+| `ResearchSignal` | A new or changed paper, decision, release, benchmark, or local document |
 | `Evidence` | A source-grounded fragment with a stable locator |
-| `BriefingCandidate` | A normalized and scored candidate with an eligibility trace |
+| `BriefingCandidate` | A normalized, scored candidate with an eligibility trace |
 | `ResearchDevelopment` | A cross-source, cross-run research development |
 | `BriefingSpec` | Renderer-neutral, timed, evidence-linked briefing content |
-| `RunManifest` | Config, versions, stages, inputs, outputs, warnings, and failures for one run |
+| `RunManifest` | Inputs, outputs, versions, stages, warnings, and failures for one run |
 
-## History model
+## Persistence and policy
 
-- `.frontier/runs/<run-id>/` is append-only and stores every stage result plus resolved config.
-- `.frontier/state/` stores current cursors, identity aliases, and development continuity.
-- `.frontier/cache/raw/` stores immutable content-addressed provider snapshots.
-- Failed Sync runs are retained but never advance the last-successful cursor.
+- `.frontier/runs/` is append-only; `.frontier/state/` holds cursors; `.frontier/cache/raw/` holds immutable source snapshots.
+- Failed Sync runs remain inspectable but never advance the last-successful cursor.
+- `frontier.yaml` owns domain policy; unknown fields fail and secrets are only environment references.
+- Gates pass, exclude, warn, or exempt candidates; scores only order eligible candidates.
 
-## Configuration rules
+## Runtime and acceptance
 
-- `frontier.yaml` is the domain-policy source of truth; unknown fields fail validation.
-- Secrets are referenced by environment-variable name and never written to artifacts.
-- Citation thresholds, freshness exemptions, weights, paths, duration, and render targets are configurable.
-- A gate is a pass/exclude/warn eligibility rule; a score orders candidates that remain eligible.
-
-## Runtime and dependency management
-
-- Python 3.12 is the development and CI baseline.
-- `uv` is the only supported environment and dependency manager; `uv.lock` makes installs reproducible.
-- CI installs with `uv sync --locked` and executes checks with `uv run --locked`.
-
-## Week 1 acceptance
-
-- Versioned Pydantic models exist for config and the six core artifacts.
-- `frontier build --config <path>` validates config and creates standard stage output plus `RunManifest`.
-- Build is safe to run repeatedly and unknown config keys fail visibly.
-- Unit and integration tests run with the Python standard test runner.
+- Python 3.12 and `uv` are required; `uv.lock` and `uv sync --locked` make installs reproducible.
+- `frontier build --config <path>` creates standard stage output and a `RunManifest`.
+- Unit and integration tests run through `uv run --locked`.
+- Repeated Build runs are independent, and unknown configuration fields fail visibly.

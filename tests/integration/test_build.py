@@ -40,7 +40,3 @@ class BuildIntegrationTests(unittest.TestCase):
                 self.assertEqual(result["stage"], "build")
                 self.assertTrue(result["next_stage_allowed"])
                 self.assertTrue((run_dir / "00-build/resolved-config.yaml").exists())
-
-
-if __name__ == "__main__":
-    unittest.main()

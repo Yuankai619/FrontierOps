@@ -1,7 +1,5 @@
 # FrontierOps Agent Guide
 
-This file applies to the entire repository.
-
 ## Product boundary
 
 - FrontierOps is an agent-agnostic research briefing harness, not an agent framework.
@@ -18,12 +16,13 @@ This file applies to the entire repository.
 - Keep each PR at or below 600 changed source, test, and documentation lines. Lockfiles, caches, and generated package artifacts are excluded.
 - Keep each PR focused on one independently reviewable outcome.
 - Update `docs/system-spec.md` when behavior, schemas, commands, or architecture change.
+- Preserve the dependency direction: adapters -> application -> domain; wire dependencies only at composition roots.
 
 ## Engineering quality
 
 - Add unit tests for deterministic logic whenever feasible.
 - Add integration tests at stage, adapter, storage, or CLI boundaries whenever feasible.
-- If a test is not feasible, explain why in the PR description.
+- Explain untested behavior in the PR description.
 - Preserve raw inputs and use stable, versioned artifact contracts.
 - Reject unknown config fields. Never materialize secret values in resolved config or run artifacts.
 - Do not commit `.frontier/`, virtual environments, caches, rendered media, or credentials.
@@ -32,7 +31,5 @@ This file applies to the entire repository.
 
 ```bash
 uv sync --locked
-uv run --locked python -m unittest discover -s tests/unit
-uv run --locked python -m unittest discover -s tests/integration
 uv run --locked python -m unittest discover -s tests
 ```
