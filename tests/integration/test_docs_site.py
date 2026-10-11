@@ -60,6 +60,13 @@ class DocsSiteTests(unittest.TestCase):
             with self.subTest(page=source.name):
                 self.assertNotIn("example.html", source.read_text(encoding="utf-8"))
 
+    def test_landing_output_links_and_footer(self) -> None:
+        html = (DOCS / "index.html").read_text(encoding="utf-8")
+        self.assertIn('href="https://github.com/open-slide/open-slide"', html)
+        self.assertIn("<h3>Video</h3>", html)
+        self.assertNotIn("Narrated preview", html)
+        self.assertNotIn("System spec", html.split("<footer", 1)[1])
+
     def test_public_pages_are_english(self) -> None:
         for source in DOCS.glob("*.html"):
             with self.subTest(page=source.name):
