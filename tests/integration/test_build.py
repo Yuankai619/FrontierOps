@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 
@@ -40,3 +41,11 @@ class BuildIntegrationTests(unittest.TestCase):
                 self.assertEqual(result["stage"], "build")
                 self.assertTrue(result["next_stage_allowed"])
                 self.assertTrue((run_dir / "00-build/resolved-config.yaml").exists())
+
+            state = root / ".frontier" / "state"
+            self.assertTrue((state / "source-cursors.json").exists())
+            self.assertTrue((state / "identity-map.jsonl").exists())
+            self.assertTrue((state / "development-index.jsonl").exists())
+            with sqlite3.connect(state / "index.sqlite3") as database:
+                count = database.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+            self.assertEqual(count, 2)

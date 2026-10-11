@@ -5,7 +5,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from frontierops.application.ports import Clock, ConfigReader, EnvironmentReader, RunRepository
+from frontierops.application.ports import Clock, ConfigReader, EnvironmentReader, RunRepository, StateIndex
 from frontierops.domain.models import FrontierConfig, RunManifest, StageResult
 
 
@@ -13,6 +13,7 @@ from frontierops.domain.models import FrontierConfig, RunManifest, StageResult
 class BuildUseCase:
     config_reader: ConfigReader
     runs: RunRepository
+    state: StateIndex
     environment: EnvironmentReader
     clock: Clock
 
@@ -26,6 +27,7 @@ class BuildUseCase:
         workspace = config.project.workspace_dir
         if not workspace.is_absolute():
             workspace = config_path.resolve().parent / workspace
+        self.state.initialize(workspace)
 
         result = StageResult(
             run_id=run_id,
@@ -52,4 +54,6 @@ class BuildUseCase:
             "00-build/stage-result.json": result.model_dump(mode="json"),
             "run-manifest.json": manifest.model_dump(mode="json"),
         }
-        return self.runs.save(workspace, run_id, files)
+        run_dir = self.runs.save(workspace, run_id, files)
+        self.state.record_run(workspace, run_id, "success", run_dir / "run-manifest.json", started_at)
+        return run_dir

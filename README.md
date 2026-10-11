@@ -50,14 +50,18 @@ Composition Root -> Application Use Case -> Domain
 src/frontierops/
 ├── __init__.py
 ├── build.py
+├── config.py
 ├── domain/
 │   └── models.py
 ├── application/
 │   ├── build.py
+│   ├── config.py
 │   └── ports.py
 └── adapters/
     ├── build.py
-    └── cli.py
+    ├── cli.py
+    ├── config.py
+    └── storage.py
 ```
 
 ### `domain/models.py`
@@ -85,6 +89,8 @@ src/frontierops/
 
 未來接入資料庫、雲端 Storage 或不同 Config 格式時，應新增 Adapter，而不是修改 Domain。
 
+`application/config.py` 實作 validated inspect／diff／draft／apply；`adapters/config.py` 提供 YAML 與 atomic write；根目錄的 `config.py` 是其 Composition Root。
+
 ### `application/build.py`
 
 `BuildUseCase` 是目前唯一完成的 Application Use Case，負責：
@@ -109,6 +115,13 @@ src/frontierops/
 ### `adapters/cli.py`
 
 Driving adapter。解析 `frontier build --config ...`，呼叫 Build 流程，成功時印出 Run 路徑；設定或 I/O 錯誤時印到 stderr 並回傳 exit code `2`。
+
+### `adapters/storage.py`
+
+- `FileArtifactStore` 原子化讀寫 JSON／JSONL，並阻止路徑逃出 Store root。
+- `SQLiteStateIndex` 建立可重建的 Run／Artifact 查詢索引。
+- JSON／JSONL 是可直接檢查的 source of truth；SQLite 只負責加速查詢。
+- 重複 Build 不會清空既有 cursor、identity 或 development state。
 
 ### `build.py`
 
@@ -135,6 +148,16 @@ frontier.yaml
     ├── config-resolution.json
     ├── environment-report.json
     └── stage-result.json
+```
+
+並初始化長期保存的狀態基礎：
+
+```text
+.frontier/state/
+├── source-cursors.json
+├── identity-map.jsonl
+├── development-index.jsonl
+└── index.sqlite3
 ```
 
 ## 安裝與快速執行
@@ -175,7 +198,7 @@ uv sync --locked
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-預期結果：9 個測試全部顯示 `ok`，最後輸出 `OK`。
+預期結果：11 個測試全部顯示 `ok`，最後輸出 `OK`。
 
 ### 2. 執行真實 CLI 流程
 
@@ -206,6 +229,7 @@ uv run --locked python -m json.tool .frontier/runs/<run-id>/00-build/stage-resul
 - `stage-result.json` 的 `stage` 是 `build`。
 - `stage-result.json` 的 `next_stage_allowed` 是 `true`。
 - `resolved-config.yaml` 保留 `target_duration_seconds: 300` 與三種輸出格式。
+- `.frontier/state/` 的三個狀態檔與 SQLite index 全部存在。
 
 ### 4. 驗證 Run 可重複且彼此獨立
 
