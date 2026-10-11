@@ -51,6 +51,19 @@ ranking:
                 "slides": "05-render/open-slide/slides/frontier-briefing/index.tsx",
             })
             self.assertEqual(render_result["missing_targets"], ["video"])
+            public = Path(render_result["public_output_dir"])
+            self.assertEqual(public.parent, root / "frontier_output")
+            self.assertTrue((public / "index.html").is_file())
+            self.assertIn("Paper2Video", (public / "html/index.html").read_text())
+            self.assertTrue((public / "slides/package.json").is_file())
+            self.assertEqual(json.loads((public / "manifest.json").read_text())[
+                "video_finalized"], False)
+            run_render(run)
+            second_public = Path(json.loads((run / "05-render/render-result.json").read_text())[
+                "public_output_dir"])
+            self.assertNotEqual(second_public, public)
+            self.assertTrue((public / "index.html").is_file())
+            self.assertTrue((second_public / "html/index.html").is_file())
             slides = (run / render_result["outputs"]["slides"]).read_text()
             package = json.loads((run / "05-render/open-slide/package.json").read_text())
             self.assertEqual(package["dependencies"]["@open-slide/core"], "2.0.0")

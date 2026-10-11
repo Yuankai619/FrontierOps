@@ -6,6 +6,7 @@ import shutil
 
 from frontierops.adapters.config import YamlConfigAdapter
 from frontierops.adapters.html import StaticHtmlRenderer
+from frontierops.adapters.publish import FilesystemOutputPublisher
 from frontierops.adapters.render_assets import materialize_local_evidence
 from frontierops.adapters.slides import OpenSlideRenderer
 from frontierops.adapters.storage import FileArtifactStore
@@ -58,6 +59,13 @@ def run_render(run_dir: Path) -> Path:
     }
     if preview_path:
         render_result["outputs"]["video_preview"] = preview_path
+    output_root = config.project.output_dir
+    if not output_root.is_absolute():
+        output_root = Path(resolution["source_path"]).parent / output_root
+    public_dir = FilesystemOutputPublisher().publish(
+        run_dir, output_root, render_result["outputs"]
+    )
+    render_result["public_output_dir"] = str(public_dir)
     store.write_json(Path("05-render/render-result.json"), render_result)
     store.write_json(Path("05-render/assets-manifest.json"), {"assets": assets, "visuals": visuals})
     result = StageResult(
@@ -78,6 +86,7 @@ def run_render(run_dir: Path) -> Path:
     manifest["stages"]["render"] = "05-render/stage-result.json"
     manifest["status"] = "partial_success" if output.missing_targets else "success"
     manifest["outputs"].update(render_result["outputs"])
+    manifest["outputs"]["public_output_dir"] = str(public_dir)
     manifest["outputs"]["render_result"] = "05-render/render-result.json"
     manifest["outputs"]["render_assets"] = "05-render/assets-manifest.json"
     manifest["warnings"] = list(dict.fromkeys([*manifest["warnings"], *result.warnings]))

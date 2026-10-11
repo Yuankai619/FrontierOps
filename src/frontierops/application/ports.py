@@ -69,3 +69,7 @@ class BriefingRenderer(Protocol):
     target: str
 
     def render(self, briefing: BriefingSpec, evidence: list[Evidence]) -> str: ...
+
+
+class PublicOutputPublisher(Protocol):
+    def publish(self, run_dir: Path, output_root: Path, outputs: Mapping[str, str]) -> Path: ...
