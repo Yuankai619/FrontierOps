@@ -17,6 +17,7 @@ class ProjectConfig(StrictModel):
     timezone: str = "UTC"
     language: str = "en"
     workspace_dir: Path = Path(".frontier")
+    output_dir: Path = Path("frontier_output")
 
 
 class SyncConfig(StrictModel):

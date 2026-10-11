@@ -5,6 +5,7 @@ project:
   timezone: Asia/Taipei
   language: zh-TW
   workspace_dir: .frontier
+  output_dir: frontier_output
 profile:
   topics:
     - id: research-communication
