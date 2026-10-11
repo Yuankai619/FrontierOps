@@ -47,6 +47,7 @@ class FileSyncRepository:
         manifest["outputs"].update({
             "research_signals": "01-sync/research-signals.jsonl",
             "delta_summary": "01-sync/delta-summary.json",
+            "topic_observations": "01-sync/topic-observations.jsonl",
         })
         store.write_json(Path("run-manifest.json"), manifest)
 

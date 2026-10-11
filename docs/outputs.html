@@ -24,7 +24,7 @@
         └── papers/paper-1/
             ├── html/index.html
             └── slides/            # 可編輯 OpenSlide 專案</code></pre></section>
-<section><h2>Discover 之後</h2><p>Discover 頁面顯示本次新／更新、前幾次 Run 的數量與舊論文清單。舊論文不套新設定重新計分。選取頁在本機服務模式下寫入 <code>02-rank/briefing-selection.json</code>，包含 Run ID 與合格 candidate ID；瀏覽器不能把修改直接存回 HTML 檔。沒有資料庫。</p></section>
+<section><h2>Discover 之後</h2><p>一般來源顯示本次新／更新訊號；主題檢索另存 <code>01-sync/topic-observations.jsonl</code>，並對本次回傳的論文重新評分。<code>02-rank/topic-delta.json</code> 記錄與上次同主題 Run 的範圍、排名、Gate 及論文差異，公開 HTML 呈現同一份資料。若從 2025 改查 2026，「新納入範圍」不等於上次執行後才發表；「未回傳」也不等於撤稿。來源結果截斷時，差異不是全量。選取頁在本機服務模式下寫入 <code>02-rank/briefing-selection.json</code>；HTML 不是唯一紀錄，不需要資料庫。</p></section>
 <section><h2>Briefing 之後</h2><p><code>05-render/render-result.json.public_output_dir</code> 指向這次實際發布的資料夾。每篇 HTML 與 slide 專案在 <code>papers/paper-N/</code>，總覽版保留作舊流程相容。同一 Run 重做 Render 會產生帶序號的新公開資料夾，不覆蓋舊成果。</p><p>進入某篇的 <code>slides/</code> 執行：</p><pre><code>npm install
 npm run sync:skills
 npm run build</code></pre><p>建置後在 OpenSlide 的 <code>/s/frontier-briefing</code> 路由展示；系統目前不自動匯出 PPTX 或 PDF。影片 preview 仍以整個 Run 為單位，未拆成逐篇成品。</p></section>

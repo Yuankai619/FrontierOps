@@ -8,7 +8,8 @@ from frontierops.adapters.discovery_html import render_discovery
 from frontierops.adapters.storage import FileArtifactStore
 from frontierops.application.rank import RankService
 from frontierops.application.explain import ExplanationService
-from frontierops.domain.models import FrontierConfig, ResearchSignal, StageResult
+from frontierops.application.topic_delta import TopicBaseline, compare_topics
+from frontierops.domain.models import BriefingCandidate, FrontierConfig, ResearchSignal, StageResult
 
 
 def run_rank(run_dir: Path) -> Path:
@@ -16,10 +17,15 @@ def run_rank(run_dir: Path) -> Path:
     config = FrontierConfig.model_validate(
         YamlConfigAdapter().read(run_dir / "00-build/resolved-config.yaml")
     )
-    signals = [
+    changes = [
         ResearchSignal.model_validate(item)
         for item in store.read_jsonl(Path("01-sync/research-signals.jsonl"))
     ]
+    observations = [
+        ResearchSignal.model_validate(item)
+        for item in store.read_jsonl(Path("01-sync/topic-observations.jsonl"))
+    ]
+    signals = [item for item in changes if not item.payload.get("topic_ids")] + observations
     started = datetime.now(timezone.utc)
     output = RankService().execute(config, signals, started)
     explanations = ExplanationService().execute(
@@ -35,10 +41,17 @@ def run_rank(run_dir: Path) -> Path:
     store.write_jsonl(Path("02-rank/paper-explanations.jsonl"), explanations.explanations)
     output.report["counts"]["explained"] = len(explanations.explanations)
     store.write_json(Path("02-rank/ranking-report.json"), output.report)
+    cursors = store.read_json(Path("01-sync/source-cursors.after.json"))
+    coverage = {name: item.get("cursor", {}).get("scopes", [])
+                for name, item in cursors.get("providers", {}).items()}
+    topic_delta = compare_topics(config, explanations.candidates,
+                                 _topic_baselines(run_dir, config), coverage)
+    store.write_json(Path("02-rank/topic-delta.json"), topic_delta)
     history, previous, config_changed = _discovery_history(run_dir, store, signals)
     discovery_html = render_discovery(
         explanations.candidates, output.report["weights"], run_id=run_dir.name,
         history=history, previous=previous, config_changed=config_changed,
+        topic_delta=topic_delta,
     )
     store.write_text(Path("02-rank/discovery.html"), discovery_html)
     resolution = store.read_json(Path("00-build/config-resolution.json"))
@@ -56,6 +69,7 @@ def run_rank(run_dir: Path) -> Path:
                  "evidence": "02-rank/evidence.jsonl",
                  "explanations": "02-rank/paper-explanations.jsonl",
                  "report": "02-rank/ranking-report.json",
+                 "topic_delta": "02-rank/topic-delta.json",
                  "discovery_html": "02-rank/discovery.html"},
         counts=output.report["counts"], next_stage_allowed=True,
     )
@@ -63,9 +77,41 @@ def run_rank(run_dir: Path) -> Path:
     manifest = store.read_json(Path("run-manifest.json"))
     manifest["stages"]["rank"] = "02-rank/stage-result.json"
     manifest["outputs"]["briefing_candidates"] = "02-rank/briefing-candidates.jsonl"
+    manifest["outputs"]["topic_delta"] = "02-rank/topic-delta.json"
     manifest["outputs"]["public_discovery_html"] = str(public_html)
     store.write_json(Path("run-manifest.json"), manifest)
     return run_dir
+
+
+def _topic_baselines(run_dir: Path, config: FrontierConfig) -> dict[str, TopicBaseline]:
+    wanted = {topic.id for topic in config.profile.topics if topic.search is not None}
+    found: dict[str, TopicBaseline] = {}
+    for old in sorted(run_dir.parent.iterdir(), reverse=True):
+        if old == run_dir or not (old / "02-rank/stage-result.json").is_file():
+            continue
+        old_store = FileArtifactStore(old)
+        old_config = FrontierConfig.model_validate(
+            YamlConfigAdapter().read(old / "00-build/resolved-config.yaml")
+        )
+        old_candidates = [BriefingCandidate.model_validate(item) for item in
+                          old_store.read_jsonl(Path("02-rank/briefing-candidates.jsonl"))]
+        old_cursors = old_store.read_json(Path("01-sync/source-cursors.after.json"))
+        stage = old_store.read_json(Path("00-build/stage-result.json"))
+        for topic in old_config.profile.topics:
+            if topic.id not in wanted or topic.id in found or topic.search is None:
+                continue
+            found[topic.id] = TopicBaseline(
+                old.name, datetime.fromisoformat(stage["started_at"]),
+                topic.search.model_dump(mode="json"),
+                [gate.model_dump(mode="json") for gate in old_config.ranking.gates],
+                old_candidates,
+                [scope for provider in topic.search.providers
+                 for scope in old_cursors.get("providers", {}).get(provider, {}).get("cursor", {}).get("scopes", [])
+                 if scope.get("topic_id") == topic.id],
+            )
+        if wanted <= found.keys():
+            break
+    return found
 
 
 def _discovery_history(run_dir: Path, store: FileArtifactStore,

@@ -54,6 +54,9 @@ class ExplanationService:
                     item = _page_evidence(candidate, document, section, now)
                     items.append(item)
                     extra_evidence.append(item)
+            if not items:
+                enriched.append(candidate)
+                continue
             explanation = _explain(source, items)
             evidence_ids = list(dict.fromkeys(candidate.evidence_ids + [item.artifact_id for item in items]))
             enriched_candidate = candidate.model_copy(update={

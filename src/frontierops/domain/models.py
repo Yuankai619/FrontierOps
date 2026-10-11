@@ -356,6 +356,7 @@ class GateDecision(StrictModel):
 class BriefingCandidate(Artifact):
     subject_id: str
     title: str
+    topic_ids: list[str] = Field(default_factory=list)
     research_signal_ids: list[str]
     evidence_ids: list[str]
     features: dict[str, float]

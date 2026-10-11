@@ -5,6 +5,6 @@
 <section><h2>Setup</h2><pre><code>setup</code></pre><p>輸入是目前工作目錄。Agent 檢查 uv、安裝或使用本地 Harness，建立 active <code>frontier.yaml</code> 和輸出目錄。已有設定時不覆寫。只有不清楚目前專案在哪裡，才問路徑。</p><p>交付：設定路徑、安裝方式及缺少的可選工具。它不抓論文。</p></section>
 <section><h2>Config</h2><pre><code>config
 config https://arxiv.org/pdf/2605.31468</code></pre><p>不帶內容時，Agent 先讀現有 YAML，再問你要追蹤什麼或改哪個欄位。附 arXiv URL 時，它可取得 PDF 與核對過的書目，存到 <code>data/library/</code>，並設定來源。未指定的時長和格式沿用現有值。</p><p>變更先寫入 <code>.frontier/config-drafts/</code>，經 validate、diff 才套用到 active <code>frontier.yaml</code>。Config 不會自動 Sync。</p></section>
-<section><h2>Discover</h2><pre><code>discover</code></pre><p>Agent 此時才執行 Sync 與 Rank。結果頁列本次新增／更新、先前收錄與每次 Run 的數量；你可勾選要解說的論文並儲存。互動頁將選取寫進同一 Run 的 <code>02-rank/briefing-selection.json</code>。如果只是開啟靜態 HTML，需下載選取檔交給 Agent。</p><p>沒有新論文時應如實回報，不會憑空產生 briefing。排序分數不能視為論文品質。</p></section>
+<section><h2>Discover</h2><pre><code>discover</code></pre><p>Agent 此時才執行 Sync 與 Rank。主題結果頁比較前一次同主題 Run，列出新納入範圍、上次後發表、Gate 與名次變化；每篇都有目前分數與篩選理由。更改年份後查到的舊論文不會冒充「上次執行後的新研究」。你可勾選要解說的論文並儲存。互動頁將選取寫進同一 Run 的 <code>02-rank/briefing-selection.json</code>；靜態 HTML 則下載選取檔交給 Agent。</p><p>來源只回傳前幾名或達到上限時，Agent 必須指出比較不完整。排序分數不能視為論文品質。</p></section>
 <section><h2>Briefing</h2><pre><code>briefing</code></pre><p>Agent 讀取剛才 Run 的選取檔，不要求你再列一次論文。若未選而合格論文不只一篇，才問你要解說哪些。Agent 對照原文修正草稿，通過 Review 後 Render；時長與輸出格式以 YAML 為準，缺必要設定時才追問。</p><p>每篇論文各有一份 HTML 與 OpenSlide 專案。原圖／精確引句和來源頁碼應與主張一致；Review 的結構檢查不能替代 Agent 的語意核對。</p></section>
 </article></div></main></body></html>
