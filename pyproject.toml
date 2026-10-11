@@ -18,6 +18,11 @@ dependencies = [
 [project.scripts]
 frontier = "frontierops.adapters.cli:main"
 
+[project.optional-dependencies]
+alphaxiv = [
+    "mcp>=2,<3",
+]
+
 [tool.uv]
 required-version = ">=0.12.20,<0.14"
 

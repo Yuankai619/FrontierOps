@@ -12,4 +12,6 @@ description: Turn a researcher's natural-language topic, scholars, venues, filte
 5. Validate and diff the candidate against active YAML. Explain changed source scope, Gates, time budget and formats in ordinary language. If preview-only or identities remain unresolved, stop before apply.
 6. For an authorized change, apply the candidate, then inspect the active file. Keep secret **values** out of YAML; store environment variable names only.
 
+For a continuing research topic, retain its stable `profile.topics[].id`. Put the retrieval query, providers, and publication window under `topics[].search`; changing 2025 to 2026 is a scope change, not proof that every returned 2026 paper appeared since the last run. Configure an OpenAlex citation gate only with an explicit user-requested threshold; fresh papers may need an age exemption. If alphaXiv is selected, request 3–4 concise keywords. Do not call a truncated result set complete.
+
 Output: active YAML path, short summary of settings, validation result, diff/remaining questions, and whether the candidate was applied. Configuration never triggers Sync automatically.

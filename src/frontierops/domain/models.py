@@ -1,6 +1,6 @@
 """Versioned configuration and artifact contracts."""
 
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Literal
 
@@ -69,14 +69,34 @@ class OpenReviewSourceConfig(StrictModel):
 class SourcesConfig(StrictModel):
     semantic_scholar: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
     arxiv: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
+    openalex: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
+    alphaxiv: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
     local_library: LocalLibraryConfig = Field(default_factory=LocalLibraryConfig)
     openreview: OpenReviewSourceConfig = Field(default_factory=OpenReviewSourceConfig)
+
+
+class TopicSearchConfig(StrictModel):
+    providers: list[Literal["openalex", "alphaxiv"]] = Field(default_factory=list)
+    query: str
+    keywords: list[str] = Field(default_factory=list)
+    published_from: date | None = None
+    published_to: date | None = None
+    alphaxiv_difficulty: int = Field(default=5, ge=1, le=10)
+
+    @model_validator(mode="after")
+    def valid_window(self) -> "TopicSearchConfig":
+        if self.published_from and self.published_to and self.published_from > self.published_to:
+            raise ValueError("published_from must not be later than published_to")
+        if "alphaxiv" in self.providers and not 3 <= len(self.keywords) <= 4:
+            raise ValueError("alphaXiv discover_papers requires 3-4 keywords")
+        return self
 
 
 class TopicConfig(StrictModel):
     id: str
     description: str
     weight: float = Field(default=1.0, ge=0)
+    search: TopicSearchConfig | None = None
 
 
 class KeywordsConfig(StrictModel):
@@ -228,6 +248,12 @@ class FrontierConfig(StrictModel):
         ]
         if semantic.enabled and semantic.mode == "live" and not any(semantic_ids):
             raise ValueError("live semantic_scholar requires a tracked stable author ID")
+        for name in ("openalex", "alphaxiv"):
+            source = getattr(self.sources, name)
+            if source.enabled and source.mode == "live" and not any(
+                topic.search and name in topic.search.providers for topic in self.profile.topics
+            ):
+                raise ValueError(f"live {name} requires a topic with search.providers: [{name}]")
         return self
 
 
