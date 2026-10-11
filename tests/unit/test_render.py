@@ -4,6 +4,7 @@ import re
 import unittest
 
 from frontierops.adapters.html import StaticHtmlRenderer
+from frontierops.adapters.slides import StaticSlideRenderer
 from frontierops.application.render import RenderService, claim_fingerprints
 from frontierops.domain.models import BriefingSpec, Evidence
 
@@ -51,3 +52,17 @@ class RenderServiceTests(unittest.TestCase):
         self.assertEqual(json.loads(metadata.group(1))["claim_fingerprints"],
                          claim_fingerprints(spec))
         self.assertEqual(output.missing_targets, ["slides", "video"])
+
+    def test_slide_deck_uses_the_same_claim_fingerprints(self) -> None:
+        spec = briefing()
+        output = RenderService().execute(spec, [evidence()], [StaticSlideRenderer()])
+        document = output.documents["slides"]
+        metadata = re.search(
+            r'<script id="frontierops-claims" type="application/json">(.*?)</script>',
+            document,
+        )
+        self.assertIsNotNone(metadata)
+        self.assertEqual(json.loads(metadata.group(1))["claim_fingerprints"],
+                         claim_fingerprints(spec))
+        self.assertEqual(document.count('data-claim-fingerprint="'), 1)
+        self.assertIn("@page{size:16in 9in", document)

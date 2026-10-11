@@ -5,6 +5,7 @@ from pathlib import Path
 
 from frontierops.adapters.html import StaticHtmlRenderer
 from frontierops.adapters.render_assets import materialize_local_evidence
+from frontierops.adapters.slides import StaticSlideRenderer
 from frontierops.adapters.storage import FileArtifactStore
 from frontierops.application.render import RenderService
 from frontierops.domain.models import BriefingSpec, Evidence, StageResult
@@ -22,8 +23,10 @@ def run_render(run_dir: Path) -> Path:
         evidence, Path(resolution["source_path"]).parent, run_dir / "05-render"
     )
     started = datetime.now(timezone.utc)
-    output = RenderService().execute(briefing, evidence, [StaticHtmlRenderer()])
-    paths = {"html": "05-render/briefing.html"}
+    output = RenderService().execute(
+        briefing, evidence, [StaticHtmlRenderer(), StaticSlideRenderer()]
+    )
+    paths = {"html": "05-render/briefing.html", "slides": "05-render/slides.html"}
     for target, document in output.documents.items():
         store.write_text(Path(paths[target]), document)
     status = "partial" if output.missing_targets else "success"

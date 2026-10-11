@@ -73,3 +73,4 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - Brief groups cross-source candidates into persistent developments, suppresses unchanged items, and produces one duration-bounded renderer-neutral spec plus narration and Markdown.
 - Review is the publish boundary: schema, duration, duplicate, Evidence reference, and numeric-support errors block approval and remain inspectable.
 - Render only reads the approved BriefingSpec; the static HTML adapter escapes content, links Evidence, and records claim fingerprints for cross-format consistency checks.
+- The Demo slide adapter emits a zero-dependency 1920×1080 HTML deck with print-to-PDF CSS; it preserves the renderer port rather than coupling the Python core to an unstable browser export path.

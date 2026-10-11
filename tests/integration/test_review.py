@@ -46,8 +46,13 @@ ranking:
             html = (run / "05-render/briefing.html").read_text()
             render_result = json.loads((run / "05-render/render-result.json").read_text())
             self.assertIn("Paper2Video research presentation", html)
-            self.assertEqual(render_result["outputs"], {"html": "05-render/briefing.html"})
-            self.assertEqual(render_result["missing_targets"], ["slides", "video"])
+            self.assertEqual(render_result["outputs"], {
+                "html": "05-render/briefing.html", "slides": "05-render/slides.html",
+            })
+            self.assertEqual(render_result["missing_targets"], ["video"])
+            slides = (run / "05-render/slides.html").read_text()
+            self.assertEqual(slides.count('data-claim-fingerprint="'),
+                             len(render_result["claim_fingerprints"]))
 
             draft_path = run / "03-brief/briefing.draft.json"
             draft = json.loads(draft_path.read_text())
