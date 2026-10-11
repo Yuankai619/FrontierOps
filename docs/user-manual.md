@@ -4,7 +4,7 @@ FrontierOps 是供既有 Coding Agent 使用的研究簡報 Harness。研究人�
 
 ## Quick Start：研究人員只需四個 Agent Skill
 
-需求：先安裝 `uv >= 0.12.20, < 0.13`；slides/video 另需 Node.js／npm。先在 Claude Code、Codex CLI 或 GitHub Copilot CLI 裝 FrontierOps plugin（遠端 repository 必須包含已合併的 plugin 版本）：
+需求：先安裝 `uv >= 0.12.20, < 0.14`；slides/video 另需 Node.js／npm。先在 Claude Code、Codex CLI 或 GitHub Copilot CLI 裝 FrontierOps plugin（遠端 repository 必須包含已合併的 plugin 版本）：
 
 ```bash
 claude plugin marketplace add Yuankai619/FrontierOps
