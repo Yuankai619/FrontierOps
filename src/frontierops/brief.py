@@ -6,7 +6,7 @@ from pathlib import Path
 from frontierops.adapters.config import YamlConfigAdapter
 from frontierops.adapters.storage import FileArtifactStore
 from frontierops.application.brief import BriefService
-from frontierops.domain.models import BriefingCandidate, FrontierConfig, StageResult
+from frontierops.domain.models import BriefingCandidate, BriefingSelection, FrontierConfig, StageResult
 
 
 def run_brief(run_dir: Path) -> Path:
@@ -19,8 +19,19 @@ def run_brief(run_dir: Path) -> Path:
     workspace = run_dir.parent.parent
     state = FileArtifactStore(workspace / "state")
     history = state.read_jsonl(Path("development-index.jsonl"))
+    selection_path = run_dir / "02-rank/briefing-selection.json"
+    selection = None
+    if selection_path.is_file():
+        selection = BriefingSelection.model_validate(
+            store.read_json(Path("02-rank/briefing-selection.json"))
+        )
+        if selection.run_id != run_dir.name:
+            raise ValueError("briefing selection belongs to a different Run")
     started = datetime.now(timezone.utc)
-    output = BriefService().execute(config, candidates, history, run_dir.name, started)
+    output = BriefService().execute(
+        config, candidates, history, run_dir.name, started,
+        selection.selected_candidate_ids if selection else None,
+    )
     store.write_jsonl(Path("03-brief/research-developments.jsonl"),
                       [item.model_dump(mode="json") for item in output.developments])
     store.write_json(Path("03-brief/development-link-report.json"), output.link_report)
@@ -34,7 +45,8 @@ def run_brief(run_dir: Path) -> Path:
     result = StageResult(
         run_id=run_dir.name, stage="brief", status="success", started_at=started,
         finished_at=datetime.now(timezone.utc),
-        input_refs=["02-rank/briefing-candidates.jsonl", "02-rank/evidence.jsonl"],
+        input_refs=["02-rank/briefing-candidates.jsonl", "02-rank/evidence.jsonl"]
+        + (["02-rank/briefing-selection.json"] if selection else []),
         outputs={"briefing": "03-brief/briefing.draft.json",
                  "developments": "03-brief/research-developments.jsonl"},
         counts={"developments": len(output.developments),

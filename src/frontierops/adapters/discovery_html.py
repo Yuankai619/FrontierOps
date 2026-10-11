@@ -1,41 +1,54 @@
-"""An inspectable, escaped HTML view of Rank decisions."""
+"""Discovery timeline and selectable, escaped paper report."""
 
 from html import escape
+import json
 
 from frontierops.domain.models import BriefingCandidate
 
 
-def render_discovery(candidates: list[BriefingCandidate], weights: dict) -> str:
-    enabled = {name: item["weight"] for name, item in weights.items() if item["enabled"]}
+def render_discovery(candidates: list[BriefingCandidate], weights: dict, *, run_id: str = "",
+                     history: list[dict] | None = None, previous: list[dict] | None = None,
+                     config_changed: bool = False) -> str:
+    enabled = {key: val["weight"] for key, val in weights.items() if val["enabled"]}
     denominator = sum(enabled.values()) or 1.0
-    included = sum(not _excluded(item) for item in candidates)
+    eligible = sum(not _excluded(item) for item in candidates)
     cards = "\n".join(_candidate(item, enabled, denominator) for item in candidates)
     if not cards:
-        cards = '<p class="empty">這次 Sync 沒有可排序的新訊號；請檢查來源狀態與設定。</p>'
+        cards = '<p>這次沒有新增或更新的論文。下方保留先前 Run 的紀錄。</p>'
+    timeline = "".join(
+        f'<tr><td>{escape(str(row["run_id"]))}</td><td>{row["new"]}</td>'
+        f'<td>{row["updated"]}</td><td>{row["unchanged"]}</td></tr>'
+        for row in (history or [])
+    )
+    prior = "".join(f'<li>{escape(str(item["title"]))}</li>' for item in (previous or []))
+    scope = ("設定已變動；舊清單是歷史收錄，不代表新設定下的完整庫存。" if config_changed
+             else "本次只排名新增或更新項目；舊清單不會重複排名。")
     return f'''<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>FrontierOps｜新研究篩選</title><style>
-:root{{--ink:#182723;--muted:#54635d;--line:#cbd2cb;--paper:#f8f7f2;--green:#1d5b50}}
-*{{box-sizing:border-box}}body{{max-width:1020px;margin:0 auto;padding:38px 24px 80px;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,sans-serif}}
-h1,h2{{font-family:Georgia,serif;line-height:1.25}}h1{{font-size:clamp(36px,5vw,60px);margin:30px 0 12px}}h2{{font-size:27px;margin:0 0 10px}}
-header{{border-bottom:2px solid var(--ink);padding-bottom:25px}}.meta,.note{{color:var(--muted)}}.controls{{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:28px 0}}
-button,input{{font:inherit;padding:8px 10px;border:1px solid var(--line);background:white;color:var(--ink)}}button{{cursor:pointer}}button[aria-pressed="true"]{{border-color:var(--green);color:var(--green);font-weight:700}}input{{min-width:260px;flex:1}}
-article{{border-top:1px solid var(--line);padding:25px 0}}article:last-child{{border-bottom:1px solid var(--line)}}.status{{font-size:14px;color:var(--green);font-weight:700}}.excluded .status{{color:#914a36}}
-.score{{font:700 24px Georgia,serif;margin:0 0 13px}}.reason{{margin:0 0 14px;color:var(--muted)}}details{{margin-top:15px}}summary{{cursor:pointer;font-weight:700}}table{{border-collapse:collapse;width:100%;margin-top:15px}}td,th{{padding:9px 8px;text-align:left;border-bottom:1px solid var(--line)}}td:last-child{{text-align:right}}.bar{{height:5px;background:#dfe6dd}}.bar span{{display:block;height:100%;background:var(--green)}}
-.explanation{{border-left:3px solid var(--green);padding-left:16px;margin:17px 0}}.empty{{padding:40px 0}}[hidden]{{display:none!important}}
-@media(max-width:580px){{body{{padding:20px 16px 50px}}.controls{{gap:8px}}input{{min-width:100%}}h2{{font-size:23px}}}}
-</style></head><body><header><h1>本次發現的新研究</h1>
-<p class="meta">共 {len(candidates)} 項候選，{included} 項通過資格檢查。分數是依 YAML 權重計算的相對排序，並非論文品質或真偽的機率。</p>
-</header><div class="controls" aria-label="篩選研究"><button type="button" data-filter="all" aria-pressed="true">全部</button>
-<button type="button" data-filter="included" aria-pressed="false">合格</button><button type="button" data-filter="excluded" aria-pressed="false">排除</button>
-<input id="search" type="search" placeholder="搜尋論文標題" aria-label="搜尋論文標題"></div><main id="results">{cards}</main>
-<p class="note">資格檢查（Gate）決定能否入選；通過後才依特徵分數排序。展開任一項可查看每條規則與各特徵的貢獻。</p>
-<script>
-const cards=[...document.querySelectorAll('article[data-state]')];let filter='all';
-function update(){{const query=document.querySelector('#search').value.trim().toLowerCase();for(const card of cards)card.hidden=(filter!=='all'&&card.dataset.state!==filter)||!card.dataset.title.toLowerCase().includes(query)}}
-document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{{filter=button.dataset.filter;document.querySelectorAll('[data-filter]').forEach(other=>other.setAttribute('aria-pressed',String(other===button)));update()}}));
-document.querySelector('#search').addEventListener('input',update);
-</script></body></html>'''
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>FrontierOps｜研究更新</title>
+<style>:root{{--ink:#111;--line:#bbb;--muted:#555}}*{{box-sizing:border-box}}body{{max-width:1050px;margin:auto;padding:34px 24px 80px;color:var(--ink);font:16px/1.6 system-ui;background:#fff}}
+h1,h2{{font-family:Georgia,serif;line-height:1.2}}h1{{font-size:clamp(36px,5vw,58px);margin:20px 0}}h2{{font-size:27px;margin:0 0 10px}}header{{border-bottom:2px solid #111;padding-bottom:18px}}
+.muted{{color:var(--muted)}}.summary{{display:flex;gap:38px;flex-wrap:wrap;margin:25px 0}}.summary strong{{display:block;font:38px Georgia,serif}}
+.history{{background:#f4f4f4;padding:20px 25px;margin:26px 0}}.history h2{{font-size:22px}}.history ul{{max-height:160px;overflow:auto}}
+table{{border-collapse:collapse;width:100%;margin:12px 0}}td,th{{padding:8px;text-align:left;border-bottom:1px solid var(--line)}}.controls{{display:flex;gap:12px;flex-wrap:wrap;margin:25px 0}}
+button,input{{font:inherit;padding:8px;border:1px solid #888;background:#fff}}button{{cursor:pointer}}button[aria-pressed="true"]{{background:#111;color:#fff}}input[type=search]{{min-width:250px;flex:1}}
+article{{border-top:1px solid var(--line);padding:25px 0}}article:last-child{{border-bottom:1px solid var(--line)}}.score{{font:22px Georgia,serif}}.select{{display:flex;align-items:center;gap:8px;margin:12px 0}}
+.select input{{width:20px;height:20px}}details{{margin-top:12px}}summary{{cursor:pointer}}.actions{{border-top:2px solid #111;margin-top:34px;padding-top:20px}}#save-status{{min-height:25px}}[hidden]{{display:none!important}}
+@media(max-width:600px){{body{{padding:18px}}input[type=search]{{min-width:100%}}}}</style></head><body>
+<header><h1>研究更新</h1><p class="muted">Run：{escape(run_id)}。分數只是目前 frontier.yaml 下的排序，不代表論文品質。</p></header>
+<div class="summary"><div><strong>{len(candidates)}</strong>本次新增或更新</div><div><strong>{eligible}</strong>符合設定</div><div><strong>{len(previous or [])}</strong>先前收錄</div></div>
+<section class="history"><h2>同步紀錄</h2><p>{escape(scope)}</p><table><thead><tr><th>Run</th><th>新增</th><th>更新</th><th>未變</th></tr></thead><tbody>{timeline}</tbody></table>
+<details><summary>查看先前收錄</summary><ul>{prior or '<li>尚無先前論文</li>'}</ul></details></section>
+<div class="controls" aria-label="篩選論文"><button data-filter="all" aria-pressed="true">全部</button><button data-filter="included" aria-pressed="false">合格</button>
+<button data-filter="excluded" aria-pressed="false">排除</button><input id="search" type="search" placeholder="搜尋論文標題" aria-label="搜尋論文標題"></div><main>{cards}</main>
+<section class="actions"><h2>選擇要解說的論文</h2><p>勾選並儲存，再對 Agent 說「briefing」。選取屬於此 Run；每篇論文分別輸出。</p>
+<button id="save-selection">儲存選取</button><p id="save-status" role="status"></p><p class="muted">Agent 開啟的本機頁面可直接儲存。開啟靜態 HTML 時，按鈕會下載 JSON；交給 Agent 放入同一 Run 的 <code>02-rank/briefing-selection.json</code>。</p></section>
+<script>const runId={json.dumps(run_id).replace('<', '\\u003c')},cards=[...document.querySelectorAll('article[data-state]')];let filter='all';
+function update(){{const q=document.querySelector('#search').value.trim().toLowerCase();for(const card of cards)card.hidden=(filter!=='all'&&card.dataset.state!==filter)||!card.dataset.title.toLowerCase().includes(q)}}
+document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));update()}}));document.querySelector('#search').addEventListener('input',update);
+document.querySelector('#save-selection').addEventListener('click',async()=>{{const ids=[...document.querySelectorAll('input[data-candidate-id]:checked')].map(x=>x.dataset.candidateId),status=document.querySelector('#save-status');
+if(!ids.length){{status.textContent='請至少選一篇合格論文。';return}}const payload={{schema_version:'0.1',run_id:runId,selected_candidate_ids:ids}},session=new URL(location.href).searchParams.get('session');
+if(session){{try{{const response=await fetch('/selection?session='+encodeURIComponent(session),{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(payload)}});if(!response.ok)throw Error(await response.text());status.textContent='已儲存。現在可以對 Agent 說「briefing」。';return}}catch(error){{status.textContent='儲存失敗：'+error.message;return}}}}
+const blob=new Blob([JSON.stringify(payload,null,2)],{{type:'application/json'}}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='briefing-selection.json';link.click();URL.revokeObjectURL(url);status.textContent='已下載選取檔，請交給 Agent。';}});</script></body></html>'''
 
 
 def _excluded(item: BriefingCandidate) -> bool:
@@ -44,26 +57,9 @@ def _excluded(item: BriefingCandidate) -> bool:
 
 def _candidate(item: BriefingCandidate, weights: dict[str, float], denominator: float) -> str:
     excluded = _excluded(item)
-    state = "excluded" if excluded else "included"
-    label = "已排除" if excluded else "合格候選"
-    gates = "".join(
-        f"<tr><td>{escape(gate.gate)}</td><td>{escape(gate.result)}</td>"
-        f"<td>{escape(gate.reason or '')}</td></tr>" for gate in item.gate_trace
-    ) or '<tr><td colspan="3">未設定 Gate</td></tr>'
-    features = "".join(
-        f"<tr><td>{escape(name)}</td><td>{item.features.get(name, 0):.3f} × {weight:.2f}</td>"
-        f"<td>{(item.features.get(name, 0) * weight / denominator * 100):.1f}</td></tr>"
-        for name, weight in weights.items()
-    )
-    explanation = item.paper_explanation
-    insight = (f'<div class="explanation"><strong>研究問題</strong><p>{escape(explanation.problem.text)}</p>'
-               f'<strong>核心想法</strong><p>{escape(explanation.core_idea.text)}</p></div>') if explanation else ""
-    reasons = "; ".join(f"{gate.gate}: {gate.result}" for gate in item.gate_trace)
-    return (f'<article class="{state}" data-state="{state}" data-title="{escape(item.title, quote=True)}">'
-            f'<span class="status">{label}</span><h2>{escape(item.title)}</h2>'
-            f'<p class="score">{item.total_score * 100:.1f} / 100</p>'
-            f'<p class="reason">{escape(reasons or "未設定 Gate")}</p>{insight}'
-            f'<details><summary>查看資格與分數依據</summary>'
-            f'<h3>Gate</h3><table><thead><tr><th>規則</th><th>結果</th><th>原因</th></tr></thead><tbody>{gates}</tbody></table>'
-            f'<h3>排序特徵</h3><table><thead><tr><th>特徵</th><th>值 × 權重</th><th>貢獻／100</th></tr></thead><tbody>{features}</tbody></table>'
-            '</details></article>')
+    gates = "".join(f"<tr><td>{escape(g.gate)}</td><td>{escape(g.result)}</td><td>{escape(g.reason or '')}</td></tr>" for g in item.gate_trace) or '<tr><td colspan="3">未設定 Gate</td></tr>'
+    features = "".join(f"<tr><td>{escape(k)}</td><td>{item.features.get(k, 0):.3f} × {v:.2f}</td><td>{item.features.get(k, 0)*v/denominator*100:.1f}</td></tr>" for k, v in weights.items())
+    select = "" if excluded else f'<label class="select"><input type="checkbox" data-candidate-id="{escape(item.artifact_id, quote=True)}" checked>列入 Briefing</label>'
+    return (f'<article data-state="{"excluded" if excluded else "included"}" data-title="{escape(item.title, quote=True)}">'
+            f'<strong>{"已排除" if excluded else "合格候選"}</strong><h2>{escape(item.title)}</h2><p class="score">排序 {item.total_score*100:.1f} / 100</p>{select}'
+            f'<details><summary>資格與分數依據</summary><h3>Gate</h3><table>{gates}</table><h3>排序特徵</h3><table>{features}</table></details></article>')

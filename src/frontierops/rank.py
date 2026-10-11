@@ -35,7 +35,11 @@ def run_rank(run_dir: Path) -> Path:
     store.write_jsonl(Path("02-rank/paper-explanations.jsonl"), explanations.explanations)
     output.report["counts"]["explained"] = len(explanations.explanations)
     store.write_json(Path("02-rank/ranking-report.json"), output.report)
-    discovery_html = render_discovery(explanations.candidates, output.report["weights"])
+    history, previous, config_changed = _discovery_history(run_dir, store, signals)
+    discovery_html = render_discovery(
+        explanations.candidates, output.report["weights"], run_id=run_dir.name,
+        history=history, previous=previous, config_changed=config_changed,
+    )
     store.write_text(Path("02-rank/discovery.html"), discovery_html)
     resolution = store.read_json(Path("00-build/config-resolution.json"))
     public_root = config.project.output_dir
@@ -62,3 +66,34 @@ def run_rank(run_dir: Path) -> Path:
     manifest["outputs"]["public_discovery_html"] = str(public_html)
     store.write_json(Path("run-manifest.json"), manifest)
     return run_dir
+
+
+def _discovery_history(run_dir: Path, store: FileArtifactStore,
+                       signals: list[ResearchSignal]) -> tuple[list[dict], list[dict], bool]:
+    """Read prior immutable Runs; no separate database or rescore of old papers."""
+    previous_by_subject: dict[str, dict] = {}
+    timeline: list[dict] = []
+    config_hashes: list[str] = []
+    for old in sorted(run_dir.parent.iterdir()):
+        if old == run_dir or not (old / "02-rank/stage-result.json").is_file():
+            continue
+        old_store = FileArtifactStore(old)
+        old_sync = old_store.read_json(Path("01-sync/stage-result.json"))
+        old_manifest = old_store.read_json(Path("run-manifest.json"))
+        old_signals = old_store.read_jsonl(Path("01-sync/research-signals.jsonl"))
+        timeline.append({"run_id": old.name,
+                         "new": sum(s["kind"] == "paper.new" for s in old_signals),
+                         "updated": sum(s["kind"] == "paper.updated" for s in old_signals),
+                         "unchanged": old_sync["counts"].get("skipped_duplicate", 0)})
+        config_hashes.append(old_manifest["config_sha256"])
+        for candidate in old_store.read_jsonl(Path("02-rank/briefing-candidates.jsonl")):
+            previous_by_subject[candidate["subject_id"]] = {
+                "subject_id": candidate["subject_id"], "title": candidate["title"],
+            }
+    current_sync = store.read_json(Path("01-sync/stage-result.json"))
+    timeline.append({"run_id": run_dir.name,
+                     "new": sum(s.kind == "paper.new" for s in signals),
+                     "updated": sum(s.kind == "paper.updated" for s in signals),
+                     "unchanged": current_sync["counts"].get("skipped_duplicate", 0)})
+    current_hash = store.read_json(Path("run-manifest.json"))["config_sha256"]
+    return timeline, list(previous_by_subject.values()), bool(config_hashes and config_hashes[-1] != current_hash)
