@@ -71,7 +71,7 @@
 
 ## Runtime 與驗收
 
-- Python 3.12 與 `uv` 是必要條件；`uv.lock` 與 `uv sync --locked` 保證可重現安裝。
+- Python 3.12 與 `uv >= 0.12.20, < 0.14` 是必要條件；CI 同時驗證 uv 0.12 與 0.13，`uv.lock` 與 `uv sync --locked` 保證可重現安裝。
 - Build 需建立標準 stage output、`RunManifest`、state files 與可重建 SQLite index，且不得覆蓋舊 Run。
 - Unit／integration tests 必須透過 `uv run --locked` 執行；未知設定欄位需明確失敗。
 - Sync 只能由使用者觸發，保存 raw snapshots，並以 stable source ID 與內容雜湊做 delta comparison。
