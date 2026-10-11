@@ -43,6 +43,15 @@ sources:
     recursive: true
     allowed_extensions: [.pdf, .md, .txt]
     allow_outside_project_root: false
+  openreview:
+    enabled: true
+    mode: fixture
+    fixture_path: data/fixtures/openreview-notes.json
+    base_url: https://api2.openreview.net
+    username_env: OPENREVIEW_USERNAME
+    password_env: OPENREVIEW_PASSWORD
+    token_env: OPENREVIEW_TOKEN
+    include_replies: true
 sync:
   trigger_mode: manual
   baseline: last_successful_sync

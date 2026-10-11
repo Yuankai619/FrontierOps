@@ -54,10 +54,22 @@ class LocalLibraryConfig(StrictModel):
     allow_outside_project_root: bool = False
 
 
+class OpenReviewSourceConfig(StrictModel):
+    enabled: bool = False
+    mode: Literal["fixture", "live"] = "fixture"
+    fixture_path: Path | None = None
+    base_url: str = "https://api2.openreview.net"
+    username_env: str = "OPENREVIEW_USERNAME"
+    password_env: str = "OPENREVIEW_PASSWORD"
+    token_env: str = "OPENREVIEW_TOKEN"
+    include_replies: bool = True
+
+
 class SourcesConfig(StrictModel):
     semantic_scholar: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
     arxiv: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
     local_library: LocalLibraryConfig = Field(default_factory=LocalLibraryConfig)
+    openreview: OpenReviewSourceConfig = Field(default_factory=OpenReviewSourceConfig)
 
 
 class BriefConfig(StrictModel):

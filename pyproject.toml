@@ -9,6 +9,7 @@ description = "Agent-agnostic research frontier briefing harness"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+  "openreview-py>=2.2,<3",
   "pydantic>=2.10,<3",
   "pymupdf>=1.26,<2",
   "PyYAML>=6.0,<7",
