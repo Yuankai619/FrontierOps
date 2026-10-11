@@ -47,10 +47,13 @@ ranking:
             render_result = json.loads((run / "05-render/render-result.json").read_text())
             self.assertIn("Paper2Video research presentation", html)
             self.assertEqual(render_result["outputs"], {
-                "html": "05-render/briefing.html", "slides": "05-render/slides.html",
+                "html": "05-render/briefing.html",
+                "slides": "05-render/open-slide/slides/frontier-briefing/index.tsx",
             })
             self.assertEqual(render_result["missing_targets"], ["video"])
-            slides = (run / "05-render/slides.html").read_text()
+            slides = (run / render_result["outputs"]["slides"]).read_text()
+            package = json.loads((run / "05-render/open-slide/package.json").read_text())
+            self.assertEqual(package["dependencies"]["@open-slide/core"], "2.0.0")
             self.assertEqual(slides.count('data-claim-fingerprint="'),
                              len(render_result["claim_fingerprints"]))
 

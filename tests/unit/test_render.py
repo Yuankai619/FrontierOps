@@ -4,7 +4,7 @@ import re
 import unittest
 
 from frontierops.adapters.html import StaticHtmlRenderer
-from frontierops.adapters.slides import StaticSlideRenderer
+from frontierops.adapters.slides import OpenSlideRenderer
 from frontierops.application.render import RenderService, claim_fingerprints
 from frontierops.domain.models import BriefingSpec, Evidence
 
@@ -67,14 +67,22 @@ class RenderServiceTests(unittest.TestCase):
 
     def test_slide_deck_uses_the_same_claim_fingerprints(self) -> None:
         spec = briefing()
-        output = RenderService().execute(spec, [evidence()], [StaticSlideRenderer()])
+        output = RenderService().execute(spec, [evidence()], [OpenSlideRenderer()])
         document = output.documents["slides"]
-        metadata = re.search(
-            r'<script id="frontierops-claims" type="application/json">(.*?)</script>',
-            document,
-        )
+        metadata = re.search(r'export const frontieropsClaims = (\{.*?\});', document)
         self.assertIsNotNone(metadata)
         self.assertEqual(json.loads(metadata.group(1))["claim_fingerprints"],
                          claim_fingerprints(spec))
         self.assertEqual(document.count('data-claim-fingerprint="'), 1)
-        self.assertIn("@page{size:16in 9in", document)
+        self.assertIn("import type { Page, SlideMeta } from '@open-slide/core'", document)
+        self.assertIn("export default [Cover, Paper1Context", document)
+        self.assertNotIn("class=\"kicker\"", document)
+
+    def test_openslide_imports_a_source_figure(self) -> None:
+        visual = {"paper-1": {"uri": "visuals/figure.png", "source_uri": "assets/paper.pdf",
+                              "page": 2, "label": "Figure 1", "caption": "Architecture"}}
+        document = OpenSlideRenderer(visual).render(briefing(), [evidence()])
+        self.assertIn("import figure1 from '../../assets/figure.png'", document)
+        self.assertIn('<img src={figure1}', document)
+        self.assertIn("Figure 1 · p. 2", document)
+        self.assertIn("export const notes =", document)

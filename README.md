@@ -20,9 +20,9 @@ Build -> Sync -> Rank -> Brief -> Review -> Render
 - 由使用者執行 `frontier sync` 才比較上次成功狀態；不啟動背景排程。
 - 保存 immutable raw cache，並以 stable external ID 與內容雜湊避免重複訊號。
 
-Sync 支援凍結 fixture、arXiv／Semantic Scholar live provider、OpenReview 與本地 PDF／文字庫。Rank 會依 YAML Gate 與可解釋分數挑選新研究，Brief 產生可調時間的 `BriefingSpec`，Review 則在發布前阻擋缺少 Evidence、引用失效、數字無依據、重複研究與超時內容。Render 已能產生 portable HTML briefing、1920×1080 HTML slide deck，以及含 HeyGen 旁白與 word-level 字幕的 HyperFrames preview project。最終 MP4 必須在人工預覽核准後才編碼，因此 preview 不會被誤記為已完成的 `video`。
+Sync 支援凍結 fixture、arXiv／Semantic Scholar live provider、OpenReview 與本地 PDF／文字庫。Rank 會依 YAML Gate 與可解釋分數挑選新研究，Brief 產生可調時間的 `BriefingSpec`，Review 則在發布前阻擋缺少 Evidence、引用失效、數字無依據、重複研究與超時內容。Render 已能產生可切換論文問題與查核證據的互動 HTML、OpenSlide v2 投影片專案，以及含 HeyGen 旁白與 word-level 字幕的 HyperFrames preview project。最終 MP4 必須在人工預覽核准後才編碼，因此 preview 不會被誤記為已完成的 `video`。
 
-Slides 採用零外部依賴的 native HTML deck，可用方向鍵播放並以瀏覽器列印為 16:9 PDF。這是刻意的 Demo 穩定性決策：OpenSlide 目前的 headless CLI 只正式支援 static site build，PDF／PPTX 仍由瀏覽器 toolbar 匯出；renderer port 保留未來替換空間。參考 [OpenSlide export 文件](https://open-slide.dev/docs/core-feature/export)。
+Slides 由 OpenSlide v2 真正產生 React `Page[]` deck，來源位於 `05-render/open-slide/`，並引用有頁碼的論文原圖。進入該目錄後執行 `npm install`、`npm run build`，即可得到 `dist/`；用 `npm run preview` 開啟 `/s/frontier-briefing`。PDF 可從 OpenSlide 工具列匯出，PPTX 目前只支援圖片式匯出，不能假稱為可編輯的原生 PPTX。參考 [OpenSlide export 文件](https://open-slide.dev/docs/core-feature/export)。
 
 Live arXiv 依 `paper_ids`、`queries` 或 `categories` 查詢並保留 base ID 與 version。Semantic Scholar 依 tracker 中已解析的 stable author ID 分頁取得論文；`SEMANTIC_SCHOLAR_API_KEY` 是選用項，未設定時使用公開無金鑰額度。Live smoke test 不放入 deterministic CI。
 
