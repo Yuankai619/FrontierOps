@@ -2,7 +2,7 @@
 
 FrontierOps 是研究前沿簡報 Harness，讓 Codex、Claude Code 等既有 Coding Agent 以可設定、可追溯的流程，協助研究人員快速理解新論文。它不是另一個 Agent framework，也不會在背景定時監控；**使用者執行 `sync` 才比較上次成功同步後的變化**。
 
-完整操作方式、所有 CLI 指令與 YAML 欄位請見[使用手冊](docs/user-manual.md)；[系統規格](docs/system-spec.md)說明契約與架構。可讀取的 Agent Skill 有[自然語言設定](skills/frontier-config/SKILL.md)和[論文簡報](skills/frontier-briefing/SKILL.md)。
+先看可直接開啟的 [HTML 介紹頁](docs/index.html)。完整操作方式、所有 CLI 指令與 YAML 欄位請見[使用手冊](docs/user-manual.md)；[系統規格](docs/system-spec.md)說明契約與架構。可讀取的 Agent Skill 有[自然語言設定](skills/frontier-config/SKILL.md)和[論文簡報](skills/frontier-briefing/SKILL.md)。
 
 ## 目前可展示什麼
 
