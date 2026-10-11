@@ -34,6 +34,18 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config.tracking.scholars[0].identities["semantic_scholar"],
                          "fixture-author-1001")
 
+    def test_live_sources_require_explicit_targets(self) -> None:
+        with self.assertRaisesRegex(ValueError, "live arxiv requires"):
+            FrontierConfig.model_validate({
+                "project": {"id": "demo", "name": "Demo"},
+                "sources": {"arxiv": {"enabled": True, "mode": "live"}},
+            })
+        with self.assertRaisesRegex(ValueError, "stable author ID"):
+            FrontierConfig.model_validate({
+                "project": {"id": "demo", "name": "Demo"},
+                "sources": {"semantic_scholar": {"enabled": True, "mode": "live"}},
+            })
+
 
 class BriefingSpecTests(unittest.TestCase):
     def test_sections_must_fit_duration_budget(self) -> None:

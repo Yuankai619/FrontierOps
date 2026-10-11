@@ -33,6 +33,15 @@ class ProviderSourceConfig(StrictModel):
     fixture_path: Path | None = None
     overlap_days: int = Field(default=3, ge=0)
     api_key_env: str | None = None
+    base_url: str | None = None
+    user_agent: str = "FrontierOps/0.1"
+    request_timeout_seconds: int = Field(default=30, gt=0)
+    request_delay_seconds: float = Field(default=3.0, ge=0)
+    page_size: int = Field(default=100, gt=0, le=1000)
+    max_results: int = Field(default=100, gt=0)
+    paper_ids: list[str] = Field(default_factory=list)
+    queries: list[str] = Field(default_factory=list)
+    categories: list[str] = Field(default_factory=list)
 
 
 class SourcesConfig(StrictModel):
@@ -76,6 +85,25 @@ class FrontierConfig(StrictModel):
     sources: SourcesConfig = Field(default_factory=SourcesConfig)
     sync: SyncConfig = Field(default_factory=SyncConfig)
     brief: BriefConfig = Field(default_factory=BriefConfig)
+
+    @model_validator(mode="after")
+    def live_sources_have_targets(self) -> "FrontierConfig":
+        arxiv = self.sources.arxiv
+        if (
+            arxiv.enabled
+            and arxiv.mode == "live"
+            and not (arxiv.paper_ids or arxiv.queries or arxiv.categories)
+        ):
+            raise ValueError("live arxiv requires paper_ids, queries, or categories")
+        semantic = self.sources.semantic_scholar
+        semantic_ids = [
+            scholar.identities.get("semantic_scholar")
+            for scholar in self.tracking.scholars
+            if "semantic_scholar" in scholar.providers
+        ]
+        if semantic.enabled and semantic.mode == "live" and not any(semantic_ids):
+            raise ValueError("live semantic_scholar requires a tracked stable author ID")
+        return self
 
 
 class ScholarIdentity(StrictModel):
