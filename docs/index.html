@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="FrontierOps：可追溯的研究論文解釋與多格式簡報 Harness。">
+  <title>FrontierOps｜研究論文簡報 Harness</title>
+  <style>
+    :root{color-scheme:light;--ink:#182723;--muted:#53635e;--line:#cbd2cb;--paper:#f8f7f2;--panel:#fffefb;--accent:#1d5b50;--code:#eef1eb}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.72 system-ui,-apple-system,"Noto Sans TC",sans-serif}
+    a{color:var(--accent);text-underline-offset:3px}a:hover{color:#0b3c34}button{font:inherit}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #ab7314;outline-offset:3px}
+    .wrap{max-width:1120px;margin:auto;padding:0 34px}.top{border-bottom:1px solid var(--line);background:var(--panel)}.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;min-height:72px}
+    .brand{font:700 24px/1.1 Georgia,serif;color:var(--ink);text-decoration:none}.top nav{display:flex;gap:24px;flex-wrap:wrap}.top nav a{font-size:14px;color:var(--ink);text-decoration:none}.top nav a:hover{text-decoration:underline}
+    h1,h2,h3{font-family:Georgia,"Noto Serif TC",serif;line-height:1.25;letter-spacing:-.025em}h1{font-size:clamp(42px,6vw,76px);max-width:880px;margin:0 0 24px}h2{font-size:clamp(29px,3.4vw,42px);margin:0 0 20px}h3{font-size:23px;margin:0 0 12px}p{margin:0 0 18px}.lead{font-size:clamp(19px,2vw,23px);line-height:1.62;max-width:750px}.muted{color:var(--muted)}
+    .hero{padding:88px 0 72px;border-bottom:1px solid var(--line)}.hero .intro{max-width:800px}.hero-actions{display:flex;gap:24px;align-items:center;flex-wrap:wrap;margin-top:32px}.primary{display:inline-block;background:var(--accent);color:white;padding:12px 20px;text-decoration:none;font-weight:600}.primary:hover{background:#0b3c34;color:#fff}.textlink{font-weight:600}
+    section.content{padding:74px 0;border-bottom:1px solid var(--line)}.section-head{display:grid;grid-template-columns:240px 1fr;gap:36px;align-items:start}.section-head>p{max-width:750px}.section-index{font:15px/1.6 ui-monospace,SFMono-Regular,monospace;color:var(--muted);border-top:2px solid var(--accent);padding-top:10px}
+    .flow{display:grid;grid-template-columns:repeat(6,1fr);margin-top:28px;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink)}.flow>div{padding:20px 15px 22px;border-right:1px solid var(--line)}.flow>div:last-child{border-right:0}.flow strong{display:block;font-size:17px}.flow span{font-size:13px;color:var(--muted);line-height:1.5;display:block;margin-top:7px}.number{font:12px ui-monospace,monospace;color:var(--accent)}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:38px}.rule{border-top:1px solid var(--line);padding-top:17px}.rule p{color:var(--muted)}.figure-note{border-left:3px solid var(--accent);padding-left:20px;margin:34px 0;color:var(--muted)}
+    pre{margin:0;background:var(--code);border:1px solid var(--line);padding:22px;overflow:auto;font:13px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;color:#21332d}code{font:0.9em ui-monospace,SFMono-Regular,Consolas,monospace}p code,td code{background:var(--code);padding:2px 4px}.codebox{position:relative;margin:22px 0 28px}.copy{position:absolute;right:11px;top:11px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 10px;font-size:12px;cursor:pointer}.copy:hover{border-color:var(--accent)}
+    .steps{margin:0;padding:0;list-style:none;counter-reset:step}.steps li{counter-increment:step;border-top:1px solid var(--line);padding:20px 0 20px 44px;position:relative}.steps li:before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:21px;color:var(--accent);font:13px ui-monospace,monospace}.steps li:last-child{border-bottom:1px solid var(--line)}
+    table{border-collapse:collapse;width:100%;margin-top:26px;font-size:14px}th{text-align:left;font-weight:700;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);padding:11px 10px}td{vertical-align:top;border-bottom:1px solid var(--line);padding:11px 10px}td:first-child{width:43%;overflow-wrap:anywhere}tbody tr:hover{background:#eeefe8}
+    details{border-top:1px solid var(--line);padding:17px 0}details:last-child{border-bottom:1px solid var(--line)}summary{cursor:pointer;font-weight:700;font-size:18px}details[open] summary{color:var(--accent)}details p{margin:14px 0 0;color:var(--muted)}
+    .sidenote{font-size:14px;color:var(--muted)}footer{padding:40px 0 58px;color:var(--muted);font-size:14px}.footer-inner{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+    @media(max-width:780px){.wrap{padding:0 20px}.top .wrap{align-items:flex-start;padding-top:17px;padding-bottom:17px;flex-direction:column}.hero{padding:55px 0}.section-head,.two{grid-template-columns:1fr;gap:16px}.flow{grid-template-columns:repeat(2,1fr)}.flow>div:nth-child(2n){border-right:0}.flow>div:nth-child(-n+4){border-bottom:1px solid var(--line)}section.content{padding:56px 0}td:first-child{width:50%}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  </style>
+</head>
+<body>
+  <header class="top"><div class="wrap">
+    <a class="brand" href="#top">FrontierOps</a>
+    <nav aria-label="頁面導覽"><a href="#concept">設計邏輯</a><a href="#quickstart">快速開始</a><a href="#commands">指令</a><a href="#configuration">設定</a><a href="user-manual.md">完整手冊</a></nav>
+  </div></header>
+  <main id="top">
+    <div class="hero"><div class="wrap intro">
+      <h1>從新論文，到值得討論的研究理解。</h1>
+      <p class="lead">FrontierOps 把來源、證據、篩選決策與解釋保存成可查核的研究簡報流程。研究人員按下 Sync 才更新；既有 Coding Agent 負責深入閱讀，Harness 確保每個結論都能回到原文。</p>
+      <div class="hero-actions"><a class="primary" href="#quickstart">跑一次離線 Demo</a><a class="textlink" href="user-manual.md">閱讀完整使用手冊</a></div>
+    </div></div>
+
+    <section class="content" id="concept"><div class="wrap">
+      <div class="section-head"><div class="section-index">設計邏輯</div><div><h2>先理解一篇論文，再決定怎麼呈現</h2><p>一篇新論文不應只變成一張摘要卡。FrontierOps 的核心解釋依序回答：原本的問題、作者的做法、實驗真正支持的結論，以及仍待驗證的限制。</p></div></div>
+      <div class="flow" aria-label="六階段資料流">
+        <div><span class="number">01</span><strong>Build</strong><span>驗證設定，建立可追溯的 Run。</span></div>
+        <div><span class="number">02</span><strong>Sync</strong><span>使用者觸發，與上次成功同步比較。</span></div>
+        <div><span class="number">03</span><strong>Rank</strong><span>套用 Gate，顯示取捨原因與分數。</span></div>
+        <div><span class="number">04</span><strong>Brief</strong><span>把論文問題與證據寫成有時間預算的說明。</span></div>
+        <div><span class="number">05</span><strong>Review</strong><span>阻擋沒有來源的數字、失效引用與超時內容。</span></div>
+        <div><span class="number">06</span><strong>Render</strong><span>從核准內容產生互動 HTML、OpenSlide 與影片預覽。</span></div>
+      </div>
+      <div class="two"><div class="rule"><h3>相同內容，多種閱讀方式</h3><p>HTML 可以切換論文問題、展開 Evidence、放大原文 Figure，再回到 PDF 原頁。OpenSlide 使用一頁一個主論點的學術簡報結構。影片先提供有旁白與字幕的可審閱場景。</p></div><div class="rule"><h3>圖像要有來源</h3><p>優先擷取使用者提供的論文 Figure 或關鍵段落，標明頁碼、caption 與來源。找不到可信素材時明示缺漏；不以假圖、無關漸層或重複卡片格冒充研究解釋。</p></div></div>
+      <p class="figure-note">架構界線：Domain 定義契約，Application 編排流程，Adapters 接外部 API、檔案與 renderer；Coding Agent 透過 Skill 使用 Harness，系統不內建另一個 Agent framework。</p>
+    </div></section>
+
+    <section class="content" id="quickstart"><div class="wrap">
+      <div class="section-head"><div class="section-index">快速開始</div><div><h2>用凍結資料跑通一次流程</h2><p>需要 Python 3.12 與 uv。範例設定使用離線 arXiv／OpenReview fixture，不需 API key；之後再切換 live provider。請在 repo 根目錄執行。</p></div></div>
+      <div class="codebox"><button class="copy" type="button" data-copy="install">複製</button><pre id="install">uv sync --locked
+uv run --locked frontier config validate --config frontier.yaml.example
+uv run --locked frontier sync --config frontier.yaml.example</pre></div>
+      <p>Sync 會印出本次 Run 的絕對路徑。以下所有 <code>&lt;run-path&gt;</code> 都替換成<strong>同一個</strong>路徑；不要混用另一次 Build 的 Run。</p>
+      <div class="codebox"><button class="copy" type="button" data-copy="pipeline">複製</button><pre id="pipeline">uv run --locked frontier rank --run &lt;run-path&gt;
+uv run --locked frontier brief --run &lt;run-path&gt;
+uv run --locked frontier review --run &lt;run-path&gt;
+uv run --locked frontier render --run &lt;run-path&gt;</pre></div>
+      <ol class="steps"><li>打開 <code>&lt;run-path&gt;/05-render/briefing.html</code>：切換問題、展開證據並檢查 PDF 連結。</li><li>到 <code>&lt;run-path&gt;/05-render/open-slide/</code> 執行 <code>npm install</code>、<code>npm run build</code>、<code>npm run preview</code>，開啟 <code>/s/frontier-briefing</code>；OpenSlide 工具列可匯出 PDF。</li><li>影片須先在 <code>05-render/hyperframes/</code> 執行 <code>npx hyperframes check</code>、<code>npx hyperframes preview --background</code>；使用者審閱核准後才編碼 MP4。預設 fixture 不啟用 HeyGen，因此不會有影片。</li></ol>
+    </div></section>
+
+    <section class="content" id="commands"><div class="wrap">
+      <div class="section-head"><div class="section-index">指令索引</div><div><h2>每個指令都有明確邊界</h2><p>以下省略共同前綴 <code>uv run --locked frontier</code>。所有 Run 後續階段都接同一個 <code>--run PATH</code>。</p></div></div>
+      <table><thead><tr><th scope="col">指令</th><th scope="col">用途</th></tr></thead><tbody>
+        <tr><td><code>schema config --format json</code></td><td>查看嚴格的 YAML 設定契約與預設值。</td></tr>
+        <tr><td><code>config inspect --config PATH</code></td><td>讀取並展開設定，不改檔案。</td></tr>
+        <tr><td><code>config validate --config PATH</code></td><td>拒絕未知欄位及無效門檻。</td></tr>
+        <tr><td><code>config draft --config PATH --output PATH</code></td><td>建立可審核的候選 YAML。</td></tr>
+        <tr><td><code>config diff --old PATH --new PATH</code></td><td>比較欄位修改前後值。</td></tr>
+        <tr><td><code>config apply --candidate PATH --config PATH</code></td><td>驗證通過後才原子更新 active YAML。</td></tr>
+        <tr><td><code>scholar resolve --name NAME --provider semantic_scholar</code></td><td>查 stable author ID 候選；同名需人工確認。目前為離線 resolver fixture。</td></tr>
+        <tr><td><code>venue resolve --name NAME --year YEAR --provider openreview</code></td><td>查 stable venue ID 候選；目前為離線 resolver fixture。</td></tr>
+        <tr><td><code>build --config PATH</code></td><td>驗證設定，建立 Run；不抓取新資料。</td></tr>
+        <tr><td><code>sync --config PATH</code></td><td>使用者主動觸發 Build 與來源 delta sync。</td></tr>
+        <tr><td><code>rank --run PATH</code></td><td>套用 Gate，排序並保存可查核 Evidence。</td></tr>
+        <tr><td><code>brief --run PATH</code></td><td>產生有時間預算的論文解釋草稿。</td></tr>
+        <tr><td><code>review --run PATH</code></td><td>檢查事實、來源、重複與時間；通過後核准。</td></tr>
+        <tr><td><code>render --run PATH</code></td><td>從已核准的 spec 產生目標格式。</td></tr>
+      </tbody></table>
+    </div></section>
+
+    <section class="content" id="configuration"><div class="wrap">
+      <div class="section-head"><div class="section-index">設定與追溯</div><div><h2>規則在 YAML，歷史留在 Run</h2><p><code>frontier.yaml</code> 控制研究範圍、來源、Gate、時間和輸出。未知欄位會驗證失敗；API key 只填環境變數<strong>名稱</strong>，不寫入金鑰本身。<a href="user-manual.md#frontieryaml-設定參考">每個欄位的完整定義見使用手冊</a>。</p></div></div>
+      <table><thead><tr><th scope="col">設定區塊</th><th scope="col">你會改什麼</th></tr></thead><tbody>
+        <tr><td><code>project</code></td><td>專案 ID、名稱、時區、語言與工作目錄。</td></tr>
+        <tr><td><code>profile</code></td><td>研究主題、主題權重、偏好與排除關鍵詞。</td></tr>
+        <tr><td><code>tracking</code></td><td>要追蹤的學者 stable ID、別名與 OpenReview venue。Google Scholar live 尚未接入。</td></tr>
+        <tr><td><code>sources</code></td><td>arXiv、Semantic Scholar、OpenReview 的 fixture/live 模式與本地 PDF 目錄、限速、憑證環境變數名稱。</td></tr>
+        <tr><td><code>sync</code></td><td>手動觸發、以上次成功 Sync 為基準、初次回看天數與來源錯誤處理。</td></tr>
+        <tr><td><code>ranking.gates</code></td><td>年份、引用數或相關度資格門檻；可排除、警示或豁免新論文。</td></tr>
+        <tr><td><code>ranking.features</code></td><td>合格候選的相關度、引用、新鮮度與來源可靠性權重。</td></tr>
+        <tr><td><code>brief</code></td><td>預設 300 秒，可改成任何正數秒數；項目上限、語速與目標格式。</td></tr>
+        <tr><td><code>review</code></td><td>對無證據、失效來源、無依據數字、重複和超時的阻擋政策。</td></tr>
+        <tr><td><code>rendering.video</code></td><td>是否啟用 HeyGen／HyperFrames preview、語音、畫布、fps 與品質。</td></tr>
+      </tbody></table>
+      <div class="two"><div class="rule"><h3>Gate 不等於分數</h3><p>Gate 先判定候選是否具備入選資格，並留下 <code>pass</code>、<code>exclude</code>、<code>warn</code> 或 <code>exempt</code>。例如新論文可豁免引用數門檻；其餘合格論文才依權重排序。</p></div><div class="rule"><h3>每次執行都可回查</h3><p><code>.frontier/runs/&lt;run-id&gt;/</code> 保留六階段產物和 Run Manifest；<code>.frontier/state/</code> 記錄上次成功同步，<code>.frontier/cache/raw/</code> 保留來源快照。新 Run 不覆蓋舊 Run。</p></div></div>
+      <div class="figure-note">需要自然語言修改設定時，用 <a href="https://github.com/Yuankai619/FrontierOps/blob/main/skills/frontier-config/SKILL.md">frontier-config Skill</a> 的 draft → validate → diff → apply；需要讓 Coding Agent 跑完整簡報與檢查媒體時，使用 <a href="https://github.com/Yuankai619/FrontierOps/blob/main/skills/frontier-briefing/SKILL.md">frontier-briefing Skill</a>。</div>
+    </div></section>
+  </main>
+  <footer><div class="wrap footer-inner"><span>FrontierOps — 以原文證據為中心的研究簡報。</span><span><a href="user-manual.md">使用手冊</a>　<a href="system-spec.md">系統規格</a>　<a href="https://github.com/Yuankai619/FrontierOps">原始碼</a></span></div></footer>
+  <script>
+    document.querySelectorAll('[data-copy]').forEach((button)=>{
+      button.addEventListener('click',async()=>{
+        const text=document.getElementById(button.dataset.copy).textContent;
+        try{await navigator.clipboard.writeText(text);button.textContent='已複製';setTimeout(()=>button.textContent='複製',1800)}
+        catch{button.textContent='請手動選取';setTimeout(()=>button.textContent='複製',1800)}
+      });
+    });
+  </script>
+</body>
+</html>
