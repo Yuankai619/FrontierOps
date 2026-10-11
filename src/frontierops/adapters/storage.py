@@ -40,6 +40,11 @@ class FileArtifactStore:
         lines = self._target(path).read_text(encoding="utf-8").splitlines()
         return [json.loads(line) for line in lines if line]
 
+    def remove(self, path: Path) -> None:
+        target = self._target(path)
+        if target.exists():
+            target.unlink()
+
 
 class SQLiteStateIndex:
     SCHEMA = """

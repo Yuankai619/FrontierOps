@@ -144,6 +144,16 @@ class BriefConfig(StrictModel):
     )
 
 
+class ReviewConfig(StrictModel):
+    required: bool = True
+    fail_on_missing_evidence: bool = True
+    fail_on_broken_source: bool = True
+    fail_on_unsupported_number: bool = True
+    fail_on_duration_over_budget: bool = True
+    fail_on_duplicate_development: bool = True
+    auto_fix: Literal["none", "safe_only"] = "safe_only"
+
+
 class ScholarTracker(StrictModel):
     id: str
     name: str
@@ -174,6 +184,7 @@ class FrontierConfig(StrictModel):
     ranking: RankingConfig = Field(default_factory=RankingConfig)
     sync: SyncConfig = Field(default_factory=SyncConfig)
     brief: BriefConfig = Field(default_factory=BriefConfig)
+    review: ReviewConfig = Field(default_factory=ReviewConfig)
 
     @model_validator(mode="after")
     def live_sources_have_targets(self) -> "FrontierConfig":
@@ -361,3 +372,25 @@ class RunManifest(StrictModel):
     stages: dict[str, str]
     outputs: dict[str, str] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
+
+
+class ReviewIssue(StrictModel):
+    code: str
+    severity: Literal["error", "warning", "info"]
+    message: str
+    section_id: str | None = None
+    claim_index: int | None = None
+
+
+class ClaimCheck(StrictModel):
+    section_id: str
+    claim_index: int
+    status: Literal["supported", "missing_evidence", "broken_evidence", "unsupported_number"]
+    evidence_ids: list[str] = Field(default_factory=list)
+    details: str = ""
+
+
+class ReviewReport(Artifact):
+    decision: Literal["approved", "blocked"]
+    issues: list[ReviewIssue] = Field(default_factory=list)
+    counts: dict[str, int] = Field(default_factory=dict)
