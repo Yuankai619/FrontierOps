@@ -1,0 +1,47 @@
+{
+  "scholars": [
+    {
+      "provider": "semantic_scholar",
+      "stable_id": "fixture-author-1001",
+      "name": "Ada Researcher",
+      "aliases": ["A. Researcher"],
+      "affiliation": "Example AI Lab",
+      "paper_count": 42,
+      "profile_url": "https://example.test/scholar/1001"
+    },
+    {
+      "provider": "semantic_scholar",
+      "stable_id": "fixture-author-2001",
+      "name": "Alex Kim",
+      "aliases": ["A. Kim"],
+      "affiliation": "Example University A",
+      "paper_count": 18,
+      "profile_url": "https://example.test/scholar/2001"
+    },
+    {
+      "provider": "semantic_scholar",
+      "stable_id": "fixture-author-2002",
+      "name": "Alex Kim",
+      "aliases": ["Alexander Kim"],
+      "affiliation": "Example University B",
+      "paper_count": 31,
+      "profile_url": "https://example.test/scholar/2002"
+    }
+  ],
+  "venues": [
+    {
+      "provider": "openreview",
+      "stable_id": "ICLR.cc/2026/Conference",
+      "name": "ICLR",
+      "year": 2026,
+      "profile_url": "https://openreview.net/group?id=ICLR.cc/2026/Conference"
+    },
+    {
+      "provider": "openreview",
+      "stable_id": "ICML.cc/2026/Conference",
+      "name": "ICML",
+      "year": 2026,
+      "profile_url": "https://openreview.net/group?id=ICML.cc/2026/Conference"
+    }
+  ]
+}

@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from frontierops.build import run_build
 from frontierops.config import config_service
+from frontierops.identity import identity_service
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -37,6 +38,16 @@ def _parser() -> argparse.ArgumentParser:
     apply = actions.add_parser("apply")
     apply.add_argument("--candidate", type=Path, required=True)
     apply.add_argument("--config", type=Path, default=Path("frontier.yaml"))
+
+    scholar = commands.add_parser("scholar", help="resolve a stable scholar identity")
+    scholar_resolve = scholar.add_subparsers(dest="action", required=True).add_parser("resolve")
+    scholar_resolve.add_argument("--name", required=True)
+    scholar_resolve.add_argument("--provider", default="semantic_scholar")
+    venue = commands.add_parser("venue", help="resolve a stable venue identity")
+    venue_resolve = venue.add_subparsers(dest="action", required=True).add_parser("resolve")
+    venue_resolve.add_argument("--name", required=True)
+    venue_resolve.add_argument("--year", type=int)
+    venue_resolve.add_argument("--provider", default="openreview")
     return parser
 
 
@@ -45,6 +56,16 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.command == "build":
             print(run_build(args.config))
+            return 0
+        if args.command in ("scholar", "venue"):
+            identities = identity_service()
+            candidates = (
+                identities.resolve_scholar(args.name, args.provider)
+                if args.command == "scholar"
+                else identities.resolve_venue(args.name, args.year, args.provider)
+            )
+            payload = [candidate.model_dump(mode="json") for candidate in candidates]
+            print(json.dumps(payload, indent=2, ensure_ascii=False))
             return 0
         service = config_service()
         if args.command == "schema":

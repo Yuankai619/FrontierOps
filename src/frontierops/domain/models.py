@@ -33,11 +33,51 @@ class BriefConfig(StrictModel):
     )
 
 
+class ScholarTracker(StrictModel):
+    id: str
+    name: str
+    aliases: list[str] = Field(default_factory=list)
+    identities: dict[str, str | None]
+    providers: list[Literal["semantic_scholar", "arxiv", "google_scholar"]]
+    backfill_days: int = Field(default=365, ge=0)
+    always_include_new_publications: bool = True
+
+
+class VenueTracker(StrictModel):
+    provider: Literal["openreview"]
+    venue_id: str
+    decisions: list[str] = Field(default_factory=list)
+
+
+class TrackingConfig(StrictModel):
+    scholars: list[ScholarTracker] = Field(default_factory=list)
+    venues: list[VenueTracker] = Field(default_factory=list)
+
+
 class FrontierConfig(StrictModel):
     schema_version: Literal["0.1"] = "0.1"
     project: ProjectConfig
+    tracking: TrackingConfig = Field(default_factory=TrackingConfig)
     sync: SyncConfig = Field(default_factory=SyncConfig)
     brief: BriefConfig = Field(default_factory=BriefConfig)
+
+
+class ScholarIdentity(StrictModel):
+    provider: str
+    stable_id: str
+    name: str
+    aliases: list[str] = Field(default_factory=list)
+    affiliation: str | None = None
+    paper_count: int | None = Field(default=None, ge=0)
+    profile_url: str | None = None
+
+
+class VenueIdentity(StrictModel):
+    provider: str
+    stable_id: str
+    name: str
+    year: int | None = None
+    profile_url: str | None = None
 
 
 class Artifact(StrictModel):

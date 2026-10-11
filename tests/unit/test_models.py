@@ -22,6 +22,18 @@ class ConfigTests(unittest.TestCase):
                 "hardcoded_threshold": 3,
             })
 
+    def test_tracking_requires_stable_identity(self) -> None:
+        config = FrontierConfig.model_validate({
+            "project": {"id": "demo", "name": "Demo"},
+            "tracking": {"scholars": [{
+                "id": "ada", "name": "Ada Researcher",
+                "identities": {"semantic_scholar": "fixture-author-1001"},
+                "providers": ["semantic_scholar"],
+            }]},
+        })
+        self.assertEqual(config.tracking.scholars[0].identities["semantic_scholar"],
+                         "fixture-author-1001")
+
 
 class BriefingSpecTests(unittest.TestCase):
     def test_sections_must_fit_duration_budget(self) -> None:

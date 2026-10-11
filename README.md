@@ -51,16 +51,19 @@ src/frontierops/
 ├── __init__.py
 ├── build.py
 ├── config.py
+├── identity.py
 ├── domain/
 │   └── models.py
 ├── application/
 │   ├── build.py
 │   ├── config.py
+│   ├── identity.py
 │   └── ports.py
 └── adapters/
     ├── build.py
     ├── cli.py
     ├── config.py
+    ├── identity.py
     └── storage.py
 ```
 
@@ -90,6 +93,8 @@ src/frontierops/
 未來接入資料庫、雲端 Storage 或不同 Config 格式時，應新增 Adapter，而不是修改 Domain。
 
 `application/config.py` 實作 validated inspect／diff／draft／apply；`adapters/config.py` 提供 YAML 與 atomic write；根目錄的 `config.py` 是其 Composition Root。
+
+`application/identity.py` 定義 scholar／venue resolution Use Case；目前由 `adapters/identity.py` 的離線 fixture 實作。Resolver 回傳 stable ID、affiliation、paper count 與 profile URL，同名候選不會被自動消歧。
 
 ### `application/build.py`
 
@@ -182,12 +187,15 @@ uv run --locked frontier config validate --config frontier.yaml
 uv run --locked frontier config draft --config frontier.yaml --output /tmp/frontier-candidate.yaml
 uv run --locked frontier config diff --old frontier.yaml --new /tmp/frontier-candidate.yaml
 uv run --locked frontier config apply --candidate /tmp/frontier-candidate.yaml --config frontier.yaml
+uv run --locked frontier scholar resolve --name "Alex Kim" --provider semantic_scholar
+uv run --locked frontier venue resolve --name ICLR --year 2026 --provider openreview
 ```
 
 - `inspect` 與 `draft` 會 materialize 所有預設值。
 - `diff` 會輸出穩定的 JSON path、before 與 after，方便 Agent 與人類檢查。
 - `apply` 會先驗證完整 candidate，再以 atomic replace 寫入；驗證失敗不修改目標檔案。
 - 設定只保存 secret 的環境變數名稱，不應放入 API key value。
+- Resolver fixture 只用於離線驗收；多個同名候選必須由使用者確認後才能寫入 tracker。
 
 ## E2E 驗收步驟
 
@@ -198,7 +206,7 @@ uv sync --locked
 uv run --locked python -m unittest discover -s tests -v
 ```
 
-預期結果：11 個測試全部顯示 `ok`，最後輸出 `OK`。
+預期結果：17 個測試全部顯示 `ok`，最後輸出 `OK`。
 
 ### 2. 執行真實 CLI 流程
 

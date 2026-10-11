@@ -5,6 +5,19 @@ project:
   timezone: Asia/Taipei
   language: zh-TW
   workspace_dir: .frontier
+tracking:
+  scholars:
+    - id: fixture-ada
+      name: Ada Researcher
+      aliases: [A. Researcher]
+      identities: {semantic_scholar: fixture-author-1001}
+      providers: [semantic_scholar]
+      backfill_days: 365
+      always_include_new_publications: true
+  venues:
+    - provider: openreview
+      venue_id: ICLR.cc/2026/Conference
+      decisions: [Accept, "Accept (Oral)"]
 sync:
   trigger_mode: manual
   baseline: last_successful_sync

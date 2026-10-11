@@ -49,6 +49,9 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - `diff` compares materialized configs using stable paths rather than YAML formatting.
 - `draft` writes a temporary candidate; `apply` validates it before an atomic replacement.
 - Coding-agent Skills must use these commands instead of editing active configuration blindly.
+- Scholar and venue resolvers return stable IDs plus disambiguation metadata.
+- Offline fixtures define the contract; live provider adapters can replace them without changing use cases.
+- Multiple identity candidates require explicit user confirmation before config apply.
 
 ## Runtime and acceptance
 
