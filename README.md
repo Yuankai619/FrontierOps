@@ -4,7 +4,7 @@ FrontierOps 是給 Claude Code、Codex、GitHub Copilot CLI 等 Coding Agent 使
 
 首要成果是幫人理解論文的研究問題、方法、實驗支持與限制。可產生可互動 HTML、OpenSlide 原始投影片專案，以及在啟用影音相依與授權後的 HyperFrames 旁白預覽；預覽不等於已匯出的 MP4。
 
-請從[網頁版使用說明](docs/index.html)、[完整手冊](docs/user-manual.md)、[AutoSci 四個 Skill 實測範例](docs/examples/autosci.md)或[系統規格](docs/system-spec.md)開始。
+請從[專案首頁](docs/index.html)、[網頁版使用文件](docs/guide.html)、[AutoSci 四個 Skill 實測範例](docs/examples/autosci.md)或[系統規格](docs/system-spec.md)開始。
 
 ## Quick Start：先安裝 Agent Skill plugin
 
