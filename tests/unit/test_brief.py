@@ -3,7 +3,7 @@ import unittest
 
 from frontierops.application.brief import BriefService
 from frontierops.domain.models import (
-    BriefingCandidate, FrontierConfig, GroundedStatement, PaperExplanation,
+    BriefingCandidate, FrontierConfig, GroundedStatement, PaperExplanation, PaperMetadata,
 )
 
 
@@ -21,6 +21,7 @@ def candidate(identifier: str, title: str, subject: str, score: float) -> Briefi
         subject_id=subject, title=title, research_signal_ids=[identifier],
         evidence_ids=["evidence-1"], features={}, gate_trace=[], total_score=score,
         paper_explanation=explanation,
+        paper_metadata=PaperMetadata(authors=["A. Scholar"], publication_status="preprint"),
     )
 
 
@@ -43,6 +44,7 @@ class BriefServiceTests(unittest.TestCase):
                 sum(section.duration_seconds for section in output.briefing.sections), duration
             )
             self.assertTrue(output.briefing.sections[0].claims[0].evidence_ids)
+            self.assertEqual(output.briefing.sections[0].paper_metadata.authors, ["A. Scholar"])
 
     def test_unchanged_development_is_suppressed(self) -> None:
         item = candidate("remote", "Paper2Video", "arxiv:2510.05096", 1.0)

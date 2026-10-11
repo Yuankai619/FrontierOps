@@ -2,12 +2,13 @@
 
 from datetime import datetime, timezone
 from hashlib import sha256
+import json
 from pathlib import Path
 from typing import Any, Mapping, Protocol
 
 import pymupdf
 
-from frontierops.domain.models import LocalLibraryConfig, SourceBatch, SourceRecord
+from frontierops.domain.models import LocalLibraryConfig, PaperMetadata, SourceBatch, SourceRecord
 
 
 class DocumentParser(Protocol):
@@ -99,6 +100,11 @@ class LocalLibraryProvider:
     def _record(self, path: Path) -> SourceRecord:
         content = path.read_bytes()
         digest = sha256(content).hexdigest()
+        sidecar = path.with_name(path.name + ".json")
+        metadata = PaperMetadata.model_validate(
+            json.loads(sidecar.read_text(encoding="utf-8")) if sidecar.is_file() else {}
+        )
+        version = sha256((digest + metadata.model_dump_json()).encode()).hexdigest()
         parser, sections = self.router.parse(path)
         try:
             external_id = path.relative_to(self.project_root).as_posix()
@@ -107,14 +113,16 @@ class LocalLibraryProvider:
         return SourceRecord(
             provider=self.name,
             external_id=external_id,
-            version=digest,
+            version=version,
             updated_at=datetime.fromtimestamp(path.stat().st_mtime, timezone.utc),
             payload={
-                "title": path.stem,
+                "title": metadata.title or path.stem,
                 "path": external_id,
                 "extension": path.suffix.lower(),
                 "sha256": digest,
                 "parser": parser,
                 "sections": sections,
+                "metadata": metadata.model_dump(mode="json"),
+                "arxiv_id": metadata.arxiv_id,
             },
         )

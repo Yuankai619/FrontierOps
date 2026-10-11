@@ -310,6 +310,17 @@ class PaperExplanation(StrictModel):
     resources: list[str] = Field(default_factory=list)
 
 
+class PaperMetadata(StrictModel):
+    title: str | None = None
+    authors: list[str] = Field(default_factory=list)
+    affiliations: list[str] = Field(default_factory=list)
+    published_at: str | None = None
+    publication_venue: str | None = None
+    publication_status: Literal["preprint", "conference", "journal", "unknown"] = "unknown"
+    source_url: str | None = None
+    arxiv_id: str | None = None
+
+
 class GateDecision(StrictModel):
     gate: str
     result: Literal["pass", "exclude", "warn", "exempt"]
@@ -325,6 +336,7 @@ class BriefingCandidate(Artifact):
     gate_trace: list[GateDecision]
     total_score: float
     paper_explanation: PaperExplanation | None = None
+    paper_metadata: PaperMetadata = Field(default_factory=PaperMetadata)
 
 
 class BriefingSelection(StrictModel):
@@ -367,6 +379,7 @@ class BriefingSection(StrictModel):
     claims: list[EvidenceClaim] = Field(default_factory=list)
     development_id: str | None = None
     paper_explanation: PaperExplanation | None = None
+    paper_metadata: PaperMetadata = Field(default_factory=PaperMetadata)
     narration_script: str = ""
     caption_text: str = ""
     visual_hint: str = ""
