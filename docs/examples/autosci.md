@@ -1,6 +1,6 @@
 # AutoSci：四個 Skill 的實跑對話
 
-論文：[AutoSci](https://arxiv.org/abs/2605.31468)（[PDF](https://arxiv.org/pdf/2605.31468)）。以下是研究者會說的話，不是交給 Agent 的驗收指令。這次在全新的 `ADSL/FrontierOps_test/autosci-revised-example/` 執行，只產生 HTML 與 OpenSlide，不測影片。
+論文：[AutoSci](https://arxiv.org/abs/2605.31468)（[PDF](https://arxiv.org/pdf/2605.31468)）。以下是研究者會說的話，不是交給 Agent 的驗收指令。這次在全新的 `ADSL/FrontierOps_test/autosci-revised-example/` 執行，只產生 HTML 與 OpenSlide，不測影片。為避免重複下載，只複製同一份原論文 PDF 作輸入；設定、候選檔、Runs 與輸出全部重新建立。
 
 ## Setup
 
