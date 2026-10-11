@@ -81,6 +81,7 @@
 - OpenReview 使用官方 API v2 client，保存 forum、invitation、reply 與 decision provenance；認證只存在環境。
 - Rank 輸出 Evidence、合格／排除候選與可重現 ranking report；factual explanation 必須引用 abstract 或 page-level Evidence。
 - Discover 入口把 Sync＋Rank 結果呈現在 `project.output_dir/discoveries/<run-id>.html`，顯示合格／排除、每條 Gate、排序特徵與論文問題，不將分數說成品質或真偽機率。
+- 使用者操作面是可安裝的 Agent plugin（Claude、Codex、Copilot）及 Setup／Config／Discover／Briefing 四個 Skill。六個 CLI 階段仍保留可測試的 Artifacts，但不要求研究人員逐段下指令；plugin 只提供工作流程，Python Harness 由 Setup 透過 uv 安裝。
 - Brief 將跨來源候選聚合成 persistent developments，抑制 unchanged items，並產生可調時間的 renderer-neutral spec。
 - Review 是發布邊界；schema、duration、duplicate、Evidence reference 與 numeric-support 錯誤都必須阻擋核准。
 - Video preview 驗收至少包含 HyperFrames lint、browser runtime、layout、caption safe zone、contrast 與人工 snapshot 檢查。

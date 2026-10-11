@@ -1,0 +1,20 @@
+{
+  "name": "frontierops",
+  "interface": {
+    "displayName": "FrontierOps"
+  },
+  "plugins": [
+    {
+      "name": "frontierops",
+      "source": {
+        "source": "local",
+        "path": "./plugins/frontierops"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

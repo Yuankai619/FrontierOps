@@ -1,0 +1,7 @@
+{
+  "name": "frontierops",
+  "owner": {"name": "FrontierOps contributors"},
+  "plugins": [
+    {"name": "frontierops", "source": "./plugins/frontierops", "description": "Research discovery and briefing skills"}
+  ]
+}
