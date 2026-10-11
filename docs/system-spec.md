@@ -69,3 +69,4 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - Local-library roots are config-driven and project-confined by default; parser adapters emit source sections with PDF page/bbox or text line locators.
 - OpenReview uses the official API v2 client and preserves forum, invitation, reply, and decision provenance; credentials remain environment-only.
 - Rank applies YAML-ordered gates and normalized feature weights, emitting Evidence, all candidates, excluded candidates, and a reproducible ranking report.
+- Top-ranked papers receive structured explanations; factual fields reference abstract or page-level full-text Evidence, while missing explicit limitations remain labeled interpretations.

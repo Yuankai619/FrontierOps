@@ -28,6 +28,8 @@ Local Library 由 `sources.local_library.roots` 注入。相對路徑以 `fronti
 
 OpenReview 使用官方 `openreview-py` v2 client，保留 submission forum、note、invitation、reply 與 decision provenance。Offline fixture 是 deterministic demo 路徑；live mode 只從設定指定的 token 或 username/password 環境變數讀取認證，不會保存 secret value。
 
+Rank 會對前 `deep_enrich_top_k` 個合格候選產生結構化 Paper Explanation。若 local PDF title 可對應候選，會加入 page-level full-text Evidence；所有 factual explanation 欄位都必須引用 Evidence，找不到明示限制時則清楚標成 interpretation。
+
 ## 架構概覽
 
 專案採用 Hexagonal Architecture，依賴只允許朝核心方向流動：

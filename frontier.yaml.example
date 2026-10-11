@@ -77,6 +77,8 @@ ranking:
   citation_scale: 100
   freshness_half_life_days: 180
   source_reliability: {arxiv: 0.8, semantic_scholar: 0.8, openreview: 0.9, local_library: 1.0}
+  deep_enrich_top_k: 5
+  max_fulltext_pages: 20
 brief:
   target_duration_seconds: 300
   maximum_developments: 5
