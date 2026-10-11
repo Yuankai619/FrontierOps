@@ -24,6 +24,8 @@
 - Add integration tests at stage, adapter, storage, or CLI boundaries whenever feasible.
 - Explain untested behavior in the PR description.
 - Preserve raw inputs and use stable, versioned artifact contracts.
+- Persist resolved scholar and venue IDs; never use a display name as durable identity.
+- Keep ambiguous resolver candidates visible for user confirmation.
 - Reject unknown config fields. Never materialize secret values in resolved config or run artifacts.
 - Do not commit `.frontier/`, virtual environments, caches, rendered media, or credentials.
 

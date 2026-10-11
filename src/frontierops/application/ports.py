@@ -4,6 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Protocol
 
+from frontierops.domain.models import ScholarIdentity, VenueIdentity
+
 
 class ConfigReader(Protocol):
     def read(self, path: Path) -> Mapping[str, Any]: ...
@@ -27,6 +29,14 @@ class StateIndex(Protocol):
     def record_run(
         self, workspace: Path, run_id: str, status: str, manifest_path: Path, created_at: datetime
     ) -> None: ...
+
+
+class ScholarResolver(Protocol):
+    def resolve_scholars(self, name: str, provider: str) -> list[ScholarIdentity]: ...
+
+
+class VenueResolver(Protocol):
+    def resolve_venues(self, name: str, year: int | None, provider: str) -> list[VenueIdentity]: ...
 
 
 class EnvironmentReader(Protocol):
