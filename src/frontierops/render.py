@@ -9,6 +9,7 @@ from frontierops.adapters.render_assets import materialize_local_evidence
 from frontierops.adapters.slides import StaticSlideRenderer
 from frontierops.adapters.storage import FileArtifactStore
 from frontierops.adapters.video import HeyGenNarrator, HyperFramesPreviewRenderer, infer_tts_language
+from frontierops.adapters.visuals import extract_paper_visuals
 from frontierops.application.render import RenderService
 from frontierops.domain.models import BriefingSpec, Evidence, FrontierConfig, StageResult
 
@@ -27,9 +28,12 @@ def run_render(run_dir: Path) -> Path:
     evidence, assets = materialize_local_evidence(
         evidence, Path(resolution["source_path"]).parent, run_dir / "05-render"
     )
+    visuals = extract_paper_visuals(
+        briefing, evidence, run_dir / "05-render", config.ranking.max_fulltext_pages
+    )
     started = datetime.now(timezone.utc)
     output = RenderService().execute(
-        briefing, evidence, [StaticHtmlRenderer(), StaticSlideRenderer()]
+        briefing, evidence, [StaticHtmlRenderer(visuals), StaticSlideRenderer()]
     )
     paths = {"html": "05-render/briefing.html", "slides": "05-render/slides.html"}
     for target, document in output.documents.items():
@@ -45,7 +49,7 @@ def run_render(run_dir: Path) -> Path:
     if preview_path:
         render_result["outputs"]["video_preview"] = preview_path
     store.write_json(Path("05-render/render-result.json"), render_result)
-    store.write_json(Path("05-render/assets-manifest.json"), {"assets": assets})
+    store.write_json(Path("05-render/assets-manifest.json"), {"assets": assets, "visuals": visuals})
     result = StageResult(
         run_id=run_dir.name, stage="render", status=status, started_at=started,
         finished_at=datetime.now(timezone.utc),

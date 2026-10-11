@@ -57,8 +57,9 @@
 ## Render 與影片核准邊界
 
 - Render 只讀取 `04-review/briefing.approved.json`，所有格式保存相同 claim fingerprints。
-- HTML adapter 會 escape 內容、連結 Evidence，並可離線攜帶本地來源資產。
-- Slides adapter 產生零外部依賴的 1920×1080 HTML deck 與 print-to-PDF CSS。
+- HTML adapter 是逐篇論文的互動閱讀介面：研究問題分頁、Evidence 展開、原文頁碼連結、可放大的論文圖。使用者應能先理解論文，再查核原文；不能只列靜態摘要卡。
+- Render 從已引用的本地 PDF 擷取附有 caption 與頁碼的原圖，記入 `assets-manifest.json.visuals`。找不到可驗證圖片時明示缺少素材，不生成貌似原圖的裝飾圖；圖像抽取失敗不得影響文字簡報。
+- Slides 的目標 adapter 是 OpenSlide v2 project，並從同一份 `BriefingSpec` 與原圖素材產生。現有 HTML deck 為待替換的過渡版本，不是產品規格。
 - Video preview adapter 透過外部 HeyGen TTS tool 取得 WAV 與原生 word timestamps；FrontierOps 不重作 TTS client，也不保存憑證。
 - HyperFrames project 使用 scene sub-compositions、獨立音軌與 timed captions；同一 Run 重跑會重用既有旁白。
 - `video_preview` 只代表可審核 composition。未經 preview 核准前，`missing_targets` 必須保留 `video`，Run 不得宣告完整成功。
