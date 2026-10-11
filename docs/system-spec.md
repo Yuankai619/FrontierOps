@@ -63,3 +63,5 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - Build initializes state files and SQLite idempotently without overwriting prior state.
 - Unit and integration tests run through `uv run --locked`.
 - Repeated Build runs are independent, and unknown configuration fields fail visibly.
+- Sync is manually triggered, preserves raw snapshots, and compares stable source IDs plus content hashes against shared last-successful state.
+- Replaying an unchanged fixture produces no new `ResearchSignal` while retaining the new inspectable run.

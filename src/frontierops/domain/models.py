@@ -23,6 +23,21 @@ class SyncConfig(StrictModel):
     trigger_mode: Literal["manual"] = "manual"
     baseline: Literal["last_successful_sync"] = "last_successful_sync"
     default_lookback_days: int = Field(default=14, ge=0)
+    on_provider_error: Literal["fail", "partial"] = "fail"
+    preserve_raw_responses: bool = True
+
+
+class ProviderSourceConfig(StrictModel):
+    enabled: bool = False
+    mode: Literal["fixture", "live"] = "fixture"
+    fixture_path: Path | None = None
+    overlap_days: int = Field(default=3, ge=0)
+    api_key_env: str | None = None
+
+
+class SourcesConfig(StrictModel):
+    semantic_scholar: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
+    arxiv: ProviderSourceConfig = Field(default_factory=ProviderSourceConfig)
 
 
 class BriefConfig(StrictModel):
@@ -58,6 +73,7 @@ class FrontierConfig(StrictModel):
     schema_version: Literal["0.1"] = "0.1"
     project: ProjectConfig
     tracking: TrackingConfig = Field(default_factory=TrackingConfig)
+    sources: SourcesConfig = Field(default_factory=SourcesConfig)
     sync: SyncConfig = Field(default_factory=SyncConfig)
     brief: BriefConfig = Field(default_factory=BriefConfig)
 
@@ -95,6 +111,19 @@ class ResearchSignal(Artifact):
     external_id: str
     observed_at: datetime
     payload: dict[str, Any] = Field(default_factory=dict)
+
+
+class SourceRecord(StrictModel):
+    provider: str
+    external_id: str
+    version: str | None = None
+    updated_at: datetime
+    payload: dict[str, Any]
+
+
+class SourceBatch(StrictModel):
+    records: list[SourceRecord]
+    next_cursor: dict[str, Any] = Field(default_factory=dict)
 
 
 class Evidence(Artifact):
@@ -163,7 +192,9 @@ class StageResult(StrictModel):
     status: Literal["success", "partial", "failed"]
     started_at: datetime
     finished_at: datetime
+    input_refs: list[str] = Field(default_factory=list)
     outputs: dict[str, str] = Field(default_factory=dict)
+    counts: dict[str, int] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
     errors: list[str] = Field(default_factory=list)
     next_stage_allowed: bool

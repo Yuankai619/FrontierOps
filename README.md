@@ -10,15 +10,17 @@ FrontierOps 是一個 agent-agnostic 的研究前沿簡報 Harness。它不自�
 Build -> Sync -> Rank -> Brief -> Review -> Render
 ```
 
-目前只實作第一個 **Build** 階段，功能包括：
+目前實作 **Build** 與 fixture-backed **Sync** 階段，功能包括：
 
 - 驗證 `frontier.yaml`，未知欄位會直接失敗。
 - 將有效設定解析成標準化的 resolved config。
 - 建立唯一且可重現檢查的 Run 目錄。
 - 保存環境資訊、設定雜湊、Stage Result 與 Run Manifest。
 - 提供 Unit tests、Integration tests 與可執行的 `frontier` CLI。
+- 由使用者執行 `frontier sync` 才比較上次成功狀態；不啟動背景排程。
+- 保存 immutable raw cache，並以 stable external ID 與內容雜湊避免重複訊號。
 
-目前尚未實作真正的論文同步、排序、內容解釋、Review，以及 HTML／Slides／Video 產生。因此現階段的 E2E 驗收，是驗證「設定檔進入 Harness，產生完整 Build artifacts」的流程。
+目前 Sync 使用凍結 fixture；live provider、排序、內容解釋、Review，以及 HTML／Slides／Video 仍在後續 stacked PR 實作。
 
 ## 架構概覽
 
@@ -172,6 +174,7 @@ frontier.yaml
 ```bash
 uv sync --locked
 uv run --locked frontier build --config frontier.yaml.example
+uv run --locked frontier sync --config frontier.yaml.example
 ```
 
 第二個指令成功後會印出本次 Run 的完整路徑。
