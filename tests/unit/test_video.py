@@ -59,6 +59,20 @@ class VideoPreviewTests(unittest.TestCase):
         self.assertEqual(infer_tts_language("This is an English paper."), "en")
         self.assertEqual(infer_tts_language("這是一篇新的研究論文。"), "zh")
 
+    def test_method_scene_uses_original_paper_figure_without_card_grid(self) -> None:
+        visual = {"paper": {"uri": "visuals/figure.png", "source_uri": "assets/paper.pdf",
+                            "page": 2, "label": "Figure 1", "caption": "Method"}}
+        words = [TimedWord("Paper", 0, .5)]
+        documents = HyperFramesPreviewRenderer(visual).render(
+            briefing(), NarrationAudio(words, 3), 1920, 1080
+        )
+        method = documents["compositions/scene-paper-2.html"]
+        self.assertIn('src="../assets/figure.png"', method)
+        self.assertIn("Figure 1 · p. 2", method)
+        self.assertIn("gsap.timeline({paused:true})", method)
+        self.assertNotIn('class="claim"', method)
+        self.assertNotIn("text-transform:uppercase", "".join(documents.values()))
+
     def test_narrator_invokes_adapter_without_a_shell(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

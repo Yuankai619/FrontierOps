@@ -61,7 +61,7 @@
 - Render 從已引用的本地 PDF 擷取附有 caption 與頁碼的原圖，記入 `assets-manifest.json.visuals`。找不到可驗證圖片時明示缺少素材，不生成貌似原圖的裝飾圖；圖像抽取失敗不得影響文字簡報。
 - Slides adapter 從同一份 `BriefingSpec` 與原圖素材產生 OpenSlide v2 的 React `Page[]` 專案，位於 `05-render/open-slide/`。頁面以論文問題、方法原圖、結果與限制組織；每頁只有一個主訊息，原圖必須標明 Figure 與頁碼。輸出 `index.tsx` 是可編輯 deck source；執行專案內 `npm run build` 才得到 `dist/` 靜態展示站，PDF 由 OpenSlide 工具列匯出。
 - Video preview adapter 透過外部 HeyGen TTS tool 取得 WAV 與原生 word timestamps；FrontierOps 不重作 TTS client，也不保存憑證。
-- HyperFrames project 使用 scene sub-compositions、獨立音軌與 timed captions；同一 Run 重跑會重用既有旁白。
+- HyperFrames project 使用三段論文導向的 scene sub-compositions（問題／方法原圖／結果）、有頁碼的原圖、受控的進度與內容動態、獨立音軌與 timed captions；禁止重複卡片格、標題上方小標、全大寫裝飾字與無關的 pill。找不到原圖時需明示，不能生成貌似論文證據的假圖。同一 Run 重跑會重用既有旁白。
 - `video_preview` 只代表可審核 composition。未經 preview 核准前，`missing_targets` 必須保留 `video`，Run 不得宣告完整成功。
 - `rendering.video` 的 provider、voice、language、畫布、fps 與 quality 都由 YAML 控制，不得 hardcode 成隱藏政策。
 
