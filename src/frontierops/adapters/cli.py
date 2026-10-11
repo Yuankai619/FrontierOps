@@ -15,6 +15,7 @@ from frontierops.sync import run_sync
 from frontierops.rank import run_rank
 from frontierops.brief import run_brief
 from frontierops.review import run_review
+from frontierops.render import run_render
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -30,6 +31,8 @@ def _parser() -> argparse.ArgumentParser:
     brief.add_argument("--run", type=Path, required=True)
     review = commands.add_parser("review", help="validate and approve a briefing draft")
     review.add_argument("--run", type=Path, required=True)
+    render = commands.add_parser("render", help="render an approved briefing")
+    render.add_argument("--run", type=Path, required=True)
 
     schema = commands.add_parser("schema", help="print a JSON schema")
     schema_commands = schema.add_subparsers(dest="resource", required=True)
@@ -80,6 +83,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "review":
             print(run_review(args.run))
+            return 0
+        if args.command == "render":
+            print(run_render(args.run))
             return 0
         if args.command in ("scholar", "venue"):
             identities = identity_service()

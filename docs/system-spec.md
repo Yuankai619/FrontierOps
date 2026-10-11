@@ -72,3 +72,4 @@ After user-triggered Sync, FrontierOps explains new research. Briefings default 
 - Top-ranked papers receive structured explanations; factual fields reference abstract or page-level full-text Evidence, while missing explicit limitations remain labeled interpretations.
 - Brief groups cross-source candidates into persistent developments, suppresses unchanged items, and produces one duration-bounded renderer-neutral spec plus narration and Markdown.
 - Review is the publish boundary: schema, duration, duplicate, Evidence reference, and numeric-support errors block approval and remain inspectable.
+- Render only reads the approved BriefingSpec; the static HTML adapter escapes content, links Evidence, and records claim fingerprints for cross-format consistency checks.
