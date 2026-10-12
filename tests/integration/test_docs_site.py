@@ -35,6 +35,14 @@ def parse(page: Path) -> PageLinks:
 
 
 class DocsSiteTests(unittest.TestCase):
+    def test_github_pages_serves_static_docs_from_docs_directory(self) -> None:
+        self.assertTrue((DOCS / ".nojekyll").is_file())
+        self.assertTrue((DOCS / "index.html").is_file())
+        readme = (DOCS.parent / "README.md").read_text(encoding="utf-8")
+        self.assertIn("https://yuankai619.github.io/FrontierOps/", readme)
+        guide = (DOCS / "guide.html").read_text(encoding="utf-8")
+        self.assertIn("https://github.com/Yuankai619/FrontierOps/blob/main/docs/system-spec.md", guide)
+
     def test_local_links_and_anchors_resolve(self) -> None:
         for source in DOCS.glob("*.html"):
             with self.subTest(page=source.name):

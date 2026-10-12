@@ -4,7 +4,9 @@ FrontierOps is a local, agent-agnostic harness for tracking research and explain
 
 The primary outcome is an evidence-linked explanation of each paper's question, method, experiments, and limitations. Outputs can include interactive HTML and an editable OpenSlide project. A narrated HyperFrames preview is optional; it is not automatically an exported video file.
 
-[Project site](docs/index.html) · [Documentation](docs/guide.html) · [Configuration reference](docs/configuration.html) · [CLI reference](docs/commands.html) · [System specification](docs/system-spec.md)
+[Project site](https://yuankai619.github.io/FrontierOps/) · [Documentation](https://yuankai619.github.io/FrontierOps/guide.html) · [Configuration reference](https://yuankai619.github.io/FrontierOps/configuration.html) · [CLI reference](https://yuankai619.github.io/FrontierOps/commands.html) · [System specification](docs/system-spec.md)
+
+GitHub Pages publishes the static site from `main/docs` when `main` changes.
 
 ## Start with an Agent Skill
 
